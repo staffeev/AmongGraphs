@@ -2,6 +2,7 @@ import sys
 from PyQt5 import uic
 from PyQt5.QtWidgets import QMainWindow, QApplication
 from PyQt5.QtGui import QResizeEvent, QPixmap, QColor, QCloseEvent
+from models import db_session
 
 
 def except_hook(cls, exception, traceback):
@@ -60,6 +61,7 @@ class Mentor(QMainWindow):
 
 
 if __name__ == '__main__':
+    db_session.global_init('graphs.db')
     app = QApplication(sys.argv)
     programme = Mentor()
     programme.show()
