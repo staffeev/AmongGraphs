@@ -1,7 +1,0 @@
-matplotlib==3.4.3
-networkx==2.6.3
-colour==0.1.5
-Pillow==8.4.0
-PyQt5==5.15.6
-pyperclip==1.8.2
-future==0.18.2
