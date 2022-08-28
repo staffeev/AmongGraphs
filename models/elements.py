@@ -59,7 +59,8 @@ class Chain(SqlAlchemyBase):
     is_cycle = Column(Boolean, default=False)
     is_component = Column(Boolean, default=False)
     graph_id = Column(Integer, ForeignKey('graphs.id'))
-    ribs = relation("Rib", secondary="rib_to_chain", backref="chains")
+    ribs = relation("Rib", secondary="rib_to_chain", backref="chains",
+                    cascade="all, delete")
 
     def add_ribs(self, *ribs: Rib) -> None:
         """Метод добавления ребер в цепь"""
