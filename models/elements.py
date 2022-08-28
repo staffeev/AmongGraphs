@@ -15,10 +15,10 @@ association_table = sqlalchemy.Table(
 
 
 association_table_2 = sqlalchemy.Table(
-    'vertex_to_chain',
+    'rib_to_chain',
     SqlAlchemyBase.metadata,
-    sqlalchemy.Column('vertexes', sqlalchemy.Integer,
-                      sqlalchemy.ForeignKey('vertexes.id')),
+    sqlalchemy.Column('ribs', sqlalchemy.Integer,
+                      sqlalchemy.ForeignKey('ribs.id')),
     sqlalchemy.Column('chains', sqlalchemy.Integer,
                       sqlalchemy.ForeignKey('chains.id')))
 
@@ -46,7 +46,7 @@ class Rib(SqlAlchemyBase):
     graph = relation("Graph")
     points = relation("Vertex", secondary="vertex_to_rib", backref="ribs")
 
-    def add_points(self, start: Vertex, end: Vertex) -> None:
+    def add_vertexes(self, start: Vertex, end: Vertex) -> None:
         """Метод добавления начальной и конечной вершины ребра"""
         self.points.append(start)
         self.points.append(end)
@@ -61,7 +61,11 @@ class Chain(SqlAlchemyBase):
     is_cycle = Column(Boolean, default=False)
     graph_id = Column(Integer, ForeignKey('graphs.id'))
     graph = relation("Graph")
-    points = relation("Vertex", secondary="vertex_to_chain", backref="chains")
+    ribs = relation("Rib", secondary="rib_to_chain", backref="chains")
+
+    def add_ribs(self, *ribs: Rib) -> None:
+        """Метод добавления ребер в цепь"""
+        [self.ribs.append(rib) for rib in ribs if rib not in self.ribs]
 
 
 class Graph(SqlAlchemyBase):
@@ -84,12 +88,20 @@ class Graph(SqlAlchemyBase):
 
     def add_vertexes(self, *vertexes: Vertex) -> None:
         """Метод добавления вершин в граф"""
-        [self.points.append(vert) for vert in vertexes]
+        [self.points.append(vert) for vert in vertexes if vert not in self.points]
 
     def add_ribs(self, *ribs: Rib) -> None:
         """Метод добавления ребер в граф"""
-        [self.ribs.append(rib) for rib in ribs]
+        [self.ribs.append(rib) for rib in ribs if rib not in self.ribs]
+        self.add_vertexes(*[
+            vert for vert in {j for i in ribs for j in i.points}
+            if vert not in self.points
+        ])
 
     def add_chains(self, *chains: Chain) -> None:
         """Метод добавления цепей в граф"""
-        [self.chains.append(chain) for chain in chains]
+        [self.chains.append(chain) for chain in chains if chain not in self.chains]
+        self.add_ribs(*[
+            rib for rib in {j for i in chains for j in i.ribs}
+            if rib not in self.ribs
+        ])
