@@ -11,7 +11,6 @@ class ChooseGraphForm(QDialog):
         self.names = names
         self.name_to_return = None
         self.to_delete = to_delete
-        print(to_delete)
         self.setWindowTitle("Choose graph")
         self.buttonBox = QDialogButtonBox(
             QDialogButtonBox.Ok | QDialogButtonBox.Cancel

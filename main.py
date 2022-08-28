@@ -2,12 +2,12 @@ import sys
 from forms.name_the_graph import CreateGraphForm
 from forms.choose_graph import ChooseGraphForm
 from forms.tree_element import TreeItem
+from forms.edge_list import EdgeList
 from models.elements import Graph
 from functions import get_graph_names
 from PyQt5.Qt import QStandardItemModel
 from PyQt5 import uic
 from PyQt5.QtWidgets import QMainWindow, QApplication
-from PyQt5.QtGui import QResizeEvent, QCloseEvent
 from models import db_session
 
 
@@ -17,6 +17,7 @@ def except_hook(cls, exception, traceback):
 
 
 class Mentor(QMainWindow):
+    """Класс основного окна программы"""
     def __init__(self) -> None:
         super().__init__()
         uic.loadUi('UI/main.ui', self)
@@ -27,6 +28,7 @@ class Mentor(QMainWindow):
         self.treeModel = QStandardItemModel()
         self.rootNode = self.treeModel.invisibleRootItem()
         self.graph_list.setModel(self.treeModel)
+        self.window = None
         self.initUI()
 
     def initUI(self) -> None:
@@ -41,7 +43,17 @@ class Mentor(QMainWindow):
         self.actionDelete.triggered.connect(self.deleteGraph)
         self.actionSave.triggered.connect(self.saveChanges)
         self.actionExit.triggered.connect(self.close)
+        self.actionEdit_matrix.triggered.connect(self.openWindow)
+        self.actionEdit_list.triggered.connect(self.openWindow)
         # Остальные события
+
+    def openWindow(self) -> None:
+        """Обработчик открытия новых окон"""
+        session = db_session.create_session()
+        if self.sender() == self.actionEdit_list:
+            self.window = EdgeList(self.graph, session)
+            self.window.show()
+        session.close()
 
     def createGraph(self) -> None:
         """Метод для создания графа"""

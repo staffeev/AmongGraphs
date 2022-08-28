@@ -23,7 +23,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>AmongGraphs</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <property name="sizePolicy">
@@ -88,6 +88,11 @@
      <string>Edit</string>
     </property>
     <addaction name="actionUndo"/>
+    <addaction name="separator"/>
+    <addaction name="actionEdit_matrix"/>
+    <addaction name="actionEdit_list"/>
+    <addaction name="separator"/>
+    <addaction name="actionLoad_csv"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -212,6 +217,21 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="actionEdit_matrix">
+   <property name="text">
+    <string>Edit as matrix</string>
+   </property>
+  </action>
+  <action name="actionEdit_list">
+   <property name="text">
+    <string>Edit as list of edges</string>
+   </property>
+  </action>
+  <action name="actionLoad_csv">
+   <property name="text">
+    <string>Load data from csv-table</string>
    </property>
   </action>
  </widget>
