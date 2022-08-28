@@ -1,7 +1,7 @@
 import sys
 from PyQt5 import uic
 from PyQt5.QtWidgets import QMainWindow, QApplication
-from PyQt5.QtGui import QResizeEvent, QPixmap, QColor, QCloseEvent
+from PyQt5.QtGui import QResizeEvent, QCloseEvent
 from models import db_session
 
 
@@ -46,7 +46,6 @@ class Mentor(QMainWindow):
         """Метод для сохранения изменений"""
         # TODO: save changes
         pass
-
 
 
     def resizeEvent(self, event: QResizeEvent) -> None:
