@@ -31,6 +31,8 @@ class Vertex(SqlAlchemyBase):
     name = Column(String, nullable=False)
     is_cutpoint = Column(Boolean, default=False)
     graph_id = Column(Integer, ForeignKey('graphs.id'))
+    ribs = relation("Rib", secondary="vertex_to_rib",
+                    back_populates="points", cascade="all, delete")
 
 
 class Rib(SqlAlchemyBase):
@@ -42,7 +44,8 @@ class Rib(SqlAlchemyBase):
     is_directed = Column(Boolean, default=False)
     is_bridge = Column(Boolean, default=False)
     graph_id = Column(Integer, ForeignKey('graphs.id'))
-    points = relation("Vertex", secondary="vertex_to_rib", backref="ribs")
+    points = relation("Vertex", secondary="vertex_to_rib",
+                      back_populates="ribs")
 
     def add_vertexes(self, start: Vertex, end: Vertex) -> None:
         """Метод добавления начальной и конечной вершины ребра"""

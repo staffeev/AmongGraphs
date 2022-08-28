@@ -4,15 +4,15 @@ from models.elements import *
 
 db_session.global_init('graphs.db')
 session = db_session.create_session()
+# v = Vertex(name="a")
+# v2 = Vertex(name="b")
 # r = Rib()
-# r2 = Rib()
-# c = Chain()
-# c.add_ribs(r, r2)
-# session.add_all([r, r2, c])
-print(session.query(Chain).all())
+# r.add_vertexes(v, v2)
+# session.add_all([v, v2, r])
+print(session.query(Vertex).all())
 r = session.query(Rib).first()
 session.delete(r)
-print(session.query(Chain).all())
+print(session.query(Vertex).all())
 
 
 # print(session.query(Vertex).all())
