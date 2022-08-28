@@ -4,3 +4,4 @@ BLACK = QColor("black")
 WHITE = QColor("white")
 RED = QColor("red")
 GREEN = QColor("green")
+GRAPH_PROPERTIES = ['points', 'ribs']

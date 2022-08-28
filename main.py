@@ -1,8 +1,10 @@
 import sys
 from forms.name_the_graph import CreateGraphForm
 from forms.choose_graph import ChooseGraphForm
+from forms.tree_element import TreeItem
 from models.elements import Graph
 from functions import get_graph_names
+from PyQt5.Qt import QStandardItemModel
 from PyQt5 import uic
 from PyQt5.QtWidgets import QMainWindow, QApplication
 from PyQt5.QtGui import QResizeEvent, QCloseEvent
@@ -22,6 +24,9 @@ class Mentor(QMainWindow):
         self.splitter.setSizes([200, 600])
         self.widget.setLayout(self.hl)
         self.setCentralWidget(self.widget)
+        self.treeModel = QStandardItemModel()
+        self.rootNode = self.treeModel.invisibleRootItem()
+        self.graph_list.setModel(self.treeModel)
         self.initUI()
 
     def initUI(self) -> None:
@@ -52,17 +57,18 @@ class Mentor(QMainWindow):
         """Метод для открытия графа"""
         session = db_session.create_session()
         form = ChooseGraphForm(get_graph_names(session), False, self)
-        if form.exec():
+        if form.exec():  # Открытие графа
             self.graph = session.query(Graph).filter(
                 Graph.name == form.name_to_return
             ).first()
+            self.showTreeOfElements()
         session.close()
 
     def deleteGraph(self) -> None:
         """Метод для удаления графа"""
         session = db_session.create_session()
         form = ChooseGraphForm(get_graph_names(session), True, self)
-        if form.exec():
+        if form.exec():  # Удаление графа
             graph = session.query(Graph).filter(
                 Graph.name == form.name_to_return
             ).first()
@@ -77,7 +83,14 @@ class Mentor(QMainWindow):
 
     def showTreeOfElements(self) -> None:
         """Метод для построения дерева элементов графа"""
-
+        self.treeModel.setHorizontalHeaderItem(
+            0, TreeItem(self.graph.name, bold=True)
+        )
+        vertexes = TreeItem("Vertexes")
+        vertexes.appendRows([TreeItem(v.name, 8) for v in self.graph.points])
+        ribs = TreeItem("Ribs")
+        ribs.appendRows([TreeItem(str(r), 8) for r in self.graph.ribs])
+        self.rootNode.appendRows([vertexes, ribs])
 
 
 if __name__ == '__main__':

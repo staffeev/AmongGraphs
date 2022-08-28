@@ -52,6 +52,9 @@ class Rib(SqlAlchemyBase):
         self.points.append(start)
         self.points.append(end)
 
+    def __str__(self):
+        return f"{self.points[0].name}-{self.points[1].name}"
+
 
 class Chain(SqlAlchemyBase):
     """Класс для модели цепи в графе"""
