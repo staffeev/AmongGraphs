@@ -2,6 +2,7 @@ from PyQt5.QtWidgets import QDialog, QLabel, QDialogButtonBox, QLineEdit, \
     QVBoxLayout, QListWidget, QMessageBox
 from PyQt5.QtGui import QKeyEvent
 from PyQt5.QtCore import Qt
+from settings import NO_GRAPHS_WITH_NAME, NOT_SELECTED, ARE_YOU_SURE
 
 
 class ChooseGraphForm(QDialog):
@@ -44,8 +45,7 @@ class ChooseGraphForm(QDialog):
         if found_names:
             self.list.addItems(found_names)
         else:
-            self.list.addItems(["There are no graphs with this name"])
-            self.list.setEnabled(False)
+            self.list.addItems([NO_GRAPHS_WITH_NAME])
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         """Обработчик нажатия на клавиатуру
@@ -66,19 +66,14 @@ class ChooseGraphForm(QDialog):
         """Метод обработки события нажатия на кнопку ОК"""
         flag = QMessageBox.Yes
         if self.name_to_return not in self.names:
-            QMessageBox.critical(
-                self, "Error", "There are no graphs with this name"
-            )
+            QMessageBox.critical(self, "Error", NO_GRAPHS_WITH_NAME)
             return
         elif self.name_to_return is None:
-            QMessageBox.warning(
-                self, "Warning", "You have not selected the graph"
-            )
+            QMessageBox.warning(self, "Warning", NOT_SELECTED)
             return
         if self.to_delete:
             flag = QMessageBox.question(
-                self, "Delete",
-                f"Are you sure you want to delete graph {self.name_to_return}"
+                self, "Delete", f"{ARE_YOU_SURE} {self.name_to_return}"
             )
         if flag == QMessageBox.Yes:
             self.done(1)

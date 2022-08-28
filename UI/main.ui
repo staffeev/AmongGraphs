@@ -122,9 +122,16 @@
     <addaction name="actionSettings"/>
     <addaction name="actionExit"/>
    </widget>
+   <widget class="QMenu" name="menuDraw">
+    <property name="title">
+     <string>Draw</string>
+    </property>
+    <addaction name="actionDraw"/>
+   </widget>
    <addaction name="menuFIle"/>
    <addaction name="menuEdit"/>
    <addaction name="menuHelp"/>
+   <addaction name="menuDraw"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionCreate">
@@ -232,6 +239,14 @@
   <action name="actionLoad_csv">
    <property name="text">
     <string>Load data from csv-table</string>
+   </property>
+  </action>
+  <action name="actionDraw">
+   <property name="text">
+    <string>Draw graph</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
    </property>
   </action>
  </widget>

@@ -28,7 +28,7 @@ class Vertex(SqlAlchemyBase):
     __tablename__ = 'vertexes'
     serialize_rules = ('-ribs_', '-chains_', '-graph')
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String, nullable=False)
+    name = Column(String)
     is_cutpoint = Column(Boolean, default=False)
     graph_id = Column(Integer, ForeignKey('graphs.id'))
     ribs = relation("Rib", secondary="vertex_to_rib",

@@ -1,14 +1,17 @@
-from PyQt5.QtWidgets import QWidget, QTableWidgetItem, QHeaderView
+from PyQt5.QtWidgets import QWidget, QTableWidgetItem, QHeaderView, QMessageBox
 from PyQt5 import uic
-from models.elements import Graph
+from models.elements import Graph, Rib, Vertex
 from sqlalchemy.orm import Session
+from settings import CANNOT_ADD
+from functions import get_new_rib
 
 
 class EdgeList(QWidget):
     """Класс для окна со списком ребер"""
-    def __init__(self, graph: Graph, session: Session) -> None:
+    def __init__(self, graph: Graph, session: Session, parent=None) -> None:
         super().__init__()
         uic.loadUi("UI/edge_list.ui", self)
+        self.parent = parent
         self.graph = graph
         self.session = session
         self.modified = {}
@@ -21,7 +24,7 @@ class EdgeList(QWidget):
 
     def changeItem(self, item) -> None:
         """Метод для сохранения изменений в таблице"""
-        pass
+        self.modified[item.row(), item.column()] = item.text()
 
     def loadTable(self) -> None:
         """Метод для загрузки данных в таблицу"""
@@ -36,14 +39,41 @@ class EdgeList(QWidget):
             self.table.setItem(i, 3, QTableWidgetItem(str(int(rib.is_directed))))
         self.modified = {}
 
-    def addRow(self):
+    def addRow(self) -> None:
         """Метод для добавления ребра в таблицу"""
-        pass
+        if not self.checkComplete():
+            return
+        self.table.insertRow(self.table.rowCount())
+        v1, v2, rib = get_new_rib()
+        self.graph.add_ribs(rib)
+        self.session.add_all([v1, v2, rib])
+        self.session.commit()
 
     def deleteRow(self):
         """Метод для удаления ребра из таблицы"""
+
         pass
 
     def save(self) -> None:
         """Метод сохранения изменений в БД"""
+        if not self.checkComplete():
+            return
+        print(self.modified)
+        print(self.graph.ribs)
+        for i, j in self.modified:
+            if j < 2:
+                self.graph.ribs[i].points[j].name = self.modified[i, j]
+            else:
+                self.graph.ribs[i].weight = self.modified[i, j]
+        self.session.commit()
+        # self.modified = {}
 
+    def checkComplete(self) -> bool:
+        """Метод проверки заполненности полей последней строки таблицы"""
+        idx = self.table.rowCount()
+        if not idx:
+            return True
+        if any(self.table.item(idx - 1, i) is None for i in range(4)):
+            QMessageBox.critical(self, "Error", CANNOT_ADD)
+            return False
+        return True
