@@ -9,9 +9,10 @@ from forms.choose_graph import ChooseGraphForm
 from forms.tree_element import TreeItem
 from forms.edge_list import EdgeList
 from models.elements import Graph
-from functions import get_graph_names, create_ribs
+from functions import get_graph_names, create_ribs, get_graph_by_name
 from PyQt5.Qt import QStandardItemModel
 from PyQt5 import uic
+from PyQt5.QtGui import QCloseEvent
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMainWindow, QApplication
 from PyQt5.QtGui import QPixmap, QKeyEvent
@@ -30,7 +31,8 @@ class Mentor(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
         uic.loadUi('UI/main.ui', self)
-        self.graph = None
+        self.graph_name = None
+        # self.graph = None
         self.splitter.setSizes([200, 600])
         self.widget.setLayout(self.hl)
         self.setCentralWidget(self.widget)
@@ -59,11 +61,9 @@ class Mentor(QMainWindow):
 
     def openWindow(self) -> None:
         """Обработчик открытия новых окон"""
-        session = db_session.create_session()
         if self.sender() == self.actionEdit_list:
-            self.window = EdgeList(self.graph, session)
+            self.window = EdgeList(self.graph_name, self)
             self.window.show()
-        session.close()
 
     def createGraph(self) -> None:
         """Метод для создания графа"""
@@ -80,9 +80,10 @@ class Mentor(QMainWindow):
         session = db_session.create_session()
         form = ChooseGraphForm(get_graph_names(session), False, self)
         if form.exec():  # Открытие графа
-            self.graph = session.query(Graph).filter(
+            graph = session.query(Graph).filter(
                 Graph.name == form.name_to_return
             ).first()
+            self.graph_name = graph.name
             self.showTreeOfElements()
         session.close()
 
@@ -107,35 +108,40 @@ class Mentor(QMainWindow):
         """Метод для построения дерева элементов графа"""
         self.treeModel.clear()
         self.rootNode = self.treeModel.invisibleRootItem()
+        session = db_session.create_session()
+        graph = get_graph_by_name(session, self.graph_name)
         self.treeModel.setHorizontalHeaderItem(
-            0, TreeItem(self.graph.name, bold=True)
+            0, TreeItem(self.graph_name, bold=True)
         )
         vertexes = TreeItem("Vertexes")
-        vertexes.appendRows([TreeItem(v.name, 8) for v in self.graph.points])
+        vertexes.appendRows([TreeItem(v.name, 8) for v in graph.points])
         ribs = TreeItem("Ribs")
-        ribs.appendRows([TreeItem(str(r), 8) for r in self.graph.ribs])
+        ribs.appendRows([TreeItem(str(r), 8) for r in graph.ribs])
         self.rootNode.appendRows([vertexes, ribs])
+        session.close()
 
     def create_graph(self):
         """Функция, создающая граф на основе списка ребер"""
         # Получаем списки ребер графа
-        ribs = create_ribs(self.graph)
+        session = db_session.create_session()
+        graph = get_graph_by_name(session, self.graph_name)
+        ribs = create_ribs(graph)
         if ribs:
             plt.clf()
-            graph = nx.DiGraph()  # Создаем ориентированный граф
-            graph.add_edges_from(ribs)  # Добавляем в граф ребра
-            nodes = [i.name for i in self.graph.points]
+            fig_graph = nx.DiGraph()  # Создаем ориентированный граф
+            fig_graph.add_edges_from(ribs)  # Добавляем в граф ребра
+            nodes = [i.name for i in graph.points]
             # nodes = list(self.graph.nodes)  # Определим вершны графа
-            pos = nx.spring_layout(graph)  # Создаем слой, на котором
+            pos = nx.spring_layout(fig_graph)  # Создаем слой, на котором
             # будут располагаться ребра и их веса
             fig = plt.figure(2, figsize=(
                 self.canvas.size().width() // 100,
                 self.canvas.size().height() // 100))
             # Рисование весов ребер
-            nx.draw_networkx_edge_labels(graph, pos, edge_labels=ribs,
+            nx.draw_networkx_edge_labels(fig_graph, pos, edge_labels=ribs,
                                          font_size=7)
             # Рисование ребер и вершин
-            nx.draw(graph, pos, nodelist=nodes, node_size=175,
+            nx.draw(fig_graph, pos, nodelist=nodes, node_size=175,
                     with_labels=True)
 
     def plt_figure_to_pil_image(self, fig):
@@ -148,13 +154,23 @@ class Mentor(QMainWindow):
 
     def draw_graph(self):
         """Функиця для рисования графа в окне приложения"""
-        print('eee')
         self.create_graph()
         self.plt_figure_to_pil_image(plt)
         p = ImageQt(self.image)
         # Устанавливаем в метку изображение
         self.canvas.setPixmap(QPixmap.fromImage(p))
         # self.im_lab.resize(self.width(), self.height() - 68)
+
+    # def updateGraph(self) -> None:
+    #     """Метод обновления графа"""
+    #     session = db_session.create_session()
+    #     self.graph = get_graph_by_name(session, self.graph_name)
+    #     session.close()
+
+    def closeEvent(self, event: QCloseEvent) -> None:
+        """Обработка закрытия программы"""
+        self.window.close()
+
 
 if __name__ == '__main__':
     db_session.global_init('graphs.db')

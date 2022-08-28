@@ -1,19 +1,17 @@
 from PyQt5.QtWidgets import QWidget, QTableWidgetItem, QHeaderView, QMessageBox
 from PyQt5 import uic
-from models.elements import Graph, Rib, Vertex
-from sqlalchemy.orm import Session
 from settings import CANNOT_ADD
-from functions import get_new_rib
+from functions import get_new_rib, get_graph_by_name
+from models import db_session
 
 
 class EdgeList(QWidget):
     """Класс для окна со списком ребер"""
-    def __init__(self, graph: Graph, session: Session, parent=None) -> None:
+    def __init__(self, graph_name: str, parent=None) -> None:
         super().__init__()
         uic.loadUi("UI/edge_list.ui", self)
         self.parent = parent
-        self.graph = graph
-        self.session = session
+        self.graph_name = graph_name
         self.modified = {}
         self.setLayout(self.vl)
         self.addEdge.clicked.connect(self.addRow)
@@ -28,16 +26,19 @@ class EdgeList(QWidget):
 
     def loadTable(self) -> None:
         """Метод для загрузки данных в таблицу"""
-        self.table.setRowCount(len(self.graph.ribs))
+        session = db_session.create_session()
+        graph = get_graph_by_name(session, self.graph_name)
+        self.table.setRowCount(len(graph.ribs))
         header = self.table.horizontalHeader()
         for i in range(self.table.columnCount()):
             header.setSectionResizeMode(i, QHeaderView.Stretch)
-        for i, rib in enumerate(self.graph.ribs):
+        for i, rib in enumerate(graph.ribs):
             self.table.setItem(i, 0, QTableWidgetItem(rib.points[0].name))
             self.table.setItem(i, 1, QTableWidgetItem(rib.points[1].name))
-            self.table.setItem(i, 2, QTableWidgetItem(str(rib.weigth)))
+            self.table.setItem(i, 2, QTableWidgetItem(str(rib.weight)))
             self.table.setItem(i, 3, QTableWidgetItem(str(int(rib.is_directed))))
         self.modified = {}
+        session.close()
 
     def addRow(self) -> None:
         """Метод для добавления ребра в таблицу"""
@@ -45,28 +46,32 @@ class EdgeList(QWidget):
             return
         self.table.insertRow(self.table.rowCount())
         v1, v2, rib = get_new_rib()
-        self.graph.add_ribs(rib)
-        self.session.add_all([v1, v2, rib])
-        self.session.commit()
+        session = db_session.create_session()
+        graph = get_graph_by_name(self.session, self.graph_name)
+        graph.add_ribs(rib)
+        session.add_all([v1, v2, rib])
+        session.commit()
+        session.close()
 
     def deleteRow(self):
         """Метод для удаления ребра из таблицы"""
-
         pass
 
     def save(self) -> None:
         """Метод сохранения изменений в БД"""
         if not self.checkComplete():
             return
-        print(self.modified)
-        print(self.graph.ribs)
+        session = db_session.create_session()
+        graph = get_graph_by_name(session, self.graph_name)
         for i, j in self.modified:
             if j < 2:
-                self.graph.ribs[i].points[j].name = self.modified[i, j]
+                graph.ribs[i].points[j].rename(self.modified[i, j])
             else:
-                self.graph.ribs[i].weight = self.modified[i, j]
-        self.session.commit()
-        # self.modified = {}
+                graph.ribs[i].change_weight(int(self.modified[i, j]))
+        session.commit()
+        self.modified = {}
+        self.parent.showTreeOfElements()
+        self.parent.draw_graph()
 
     def checkComplete(self) -> bool:
         """Метод проверки заполненности полей последней строки таблицы"""

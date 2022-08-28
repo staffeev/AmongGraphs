@@ -1,5 +1,6 @@
 from models.elements import Graph, Vertex, Rib
 from sqlalchemy.orm import Session
+from models import db_session
 
 
 def get_graph_names(session: Session) -> list:
@@ -14,10 +15,16 @@ def get_new_rib() -> [Vertex, Vertex, Rib]:
     return v1, v2, r
 
 
+def get_graph_by_name(session: Session, name: str) -> Graph:
+    """Функция для получения графа по имени"""
+    graph = session.query(Graph).filter(Graph.name == name).first()
+    return graph
+
+
 def create_ribs(graph: Graph) -> dict:
     """Функция, создающая словарь (список) ребер графа"""
     ribs = {}
     for rib in graph.ribs:
-        ribs[rib.points[0].name, rib.points[1].name] = rib.weigth
-        ribs[rib.points[1].name, rib.points[0].name] = rib.weigth
+        ribs[rib.points[0].name, rib.points[1].name] = rib.weight
+        ribs[rib.points[1].name, rib.points[0].name] = rib.weight
     return ribs

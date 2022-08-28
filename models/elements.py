@@ -34,13 +34,17 @@ class Vertex(SqlAlchemyBase):
     ribs = relation("Rib", secondary="vertex_to_rib",
                     back_populates="points", cascade="all, delete")
 
+    def rename(self, name: str) -> None:
+        """Метод для переименования вершины"""
+        self.name = name
+
 
 class Rib(SqlAlchemyBase):
     """Класс для модели ребра графа"""
     __tablename__ = "ribs"
     serialize_rules = ('-points', '-graph')
     id = Column(Integer, primary_key=True, autoincrement=True)
-    weigth = Column(Integer, default=1)
+    weight = Column(Integer, default=1)
     is_directed = Column(Boolean, default=False)
     is_bridge = Column(Boolean, default=False)
     graph_id = Column(Integer, ForeignKey('graphs.id'))
@@ -51,6 +55,10 @@ class Rib(SqlAlchemyBase):
         """Метод добавления начальной и конечной вершины ребра"""
         self.points.append(start)
         self.points.append(end)
+
+    def change_weight(self, value: int) -> None:
+        """Метод для изменения веса ребра"""
+        self.weight = value
 
     def __str__(self):
         return f"{self.points[0].name}-{self.points[1].name}"
@@ -78,7 +86,7 @@ class Graph(SqlAlchemyBase):
     __tablename__ = "graphs"
     serialize_rules = ('-ribs', '-points', '-chains')
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String, nullable=False, unique=True)
+    name = Column(String, nullable=False, unique=True, index=True)
     num_of_vertex = Column(Integer)
     num_of_ribs = Column(Integer)
     num_of_cutpoints = Column(Integer)
