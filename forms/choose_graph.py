@@ -65,10 +65,10 @@ class ChooseGraphForm(QDialog):
     def accept(self) -> None:
         """Метод обработки события нажатия на кнопку ОК"""
         flag = QMessageBox.Yes
-        if self.name_to_return not in self.names:
+        if self.name_to_return not in self.names and self.name_to_return:
             QMessageBox.critical(self, "Error", NO_GRAPHS_WITH_NAME)
             return
-        elif self.name_to_return is None:
+        elif self.name_to_return is None or not self.name_to_return:
             QMessageBox.warning(self, "Warning", NOT_SELECTED)
             return
         if self.to_delete:

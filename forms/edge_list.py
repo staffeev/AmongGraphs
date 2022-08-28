@@ -1,5 +1,8 @@
-from PyQt5.QtWidgets import QWidget, QTableWidgetItem, QHeaderView, QMessageBox
+from PyQt5.QtWidgets import QWidget, QTableWidgetItem, QHeaderView, \
+    QMessageBox, QCheckBox
+from forms.table_checkbox import TableCheckbox
 from PyQt5 import uic
+from PyQt5.QtCore import Qt
 from settings import CANNOT_ADD, ARE_YOU_SURE
 from functions import get_new_rib, get_graph_by_name
 from models import db_session
@@ -36,7 +39,10 @@ class EdgeList(QWidget):
             self.table.setItem(i, 0, QTableWidgetItem(rib.points[0].name))
             self.table.setItem(i, 1, QTableWidgetItem(rib.points[1].name))
             self.table.setItem(i, 2, QTableWidgetItem(str(rib.weight)))
-            self.table.setItem(i, 3, QTableWidgetItem(str(int(rib.is_directed))))
+            item = TableCheckbox()
+            item.setState(rib.is_directed)
+            self.table.setCellWidget(i, 3, item)
+        self.table.resizeRowsToContents()
         self.modified = {}
         session.close()
 
@@ -67,6 +73,7 @@ class EdgeList(QWidget):
         [session.delete(rib) for rib in ribs]
         session.commit()
         session.close()
+        self.loadTable()
 
     def save(self) -> None:
         """Метод сохранения изменений в БД"""

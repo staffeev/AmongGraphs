@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QVBoxLayout, QLabel, \
     QLineEdit, QMessageBox
+from settings import ALREADY_EXISTS
 
 
 class CreateGraphForm(QDialog):
@@ -23,8 +24,6 @@ class CreateGraphForm(QDialog):
     def accept(self) -> None:
         """Обработчик события нажатия на кнопку ОК"""
         if self.inputData.text() in self.names:
-            QMessageBox.critical(
-                self, "Error", "Graph with this name is already exists"
-            )
+            QMessageBox.critical(self, "Error", ALREADY_EXISTS)
         else:
             self.done(1)

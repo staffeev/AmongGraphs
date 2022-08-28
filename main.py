@@ -162,7 +162,7 @@ class Mentor(QMainWindow):
 
     def closeEvent(self, event: QCloseEvent) -> None:
         """Обработка закрытия программы"""
-        self.window.close()
+        self.window.close() if self.window is not None else None
 
 
 if __name__ == '__main__':
