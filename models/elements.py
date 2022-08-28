@@ -1,6 +1,6 @@
 import sqlalchemy
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
-from sqlalchemy.orm import relation
+from sqlalchemy.orm import relation, relationship, backref
 from .db_session import SqlAlchemyBase
 from math import inf
 
@@ -31,7 +31,6 @@ class Vertex(SqlAlchemyBase):
     name = Column(String, nullable=False)
     is_cutpoint = Column(Boolean, default=False)
     graph_id = Column(Integer, ForeignKey('graphs.id'))
-    graph = relation("Graph")
 
 
 class Rib(SqlAlchemyBase):
@@ -43,7 +42,6 @@ class Rib(SqlAlchemyBase):
     is_directed = Column(Boolean, default=False)
     is_bridge = Column(Boolean, default=False)
     graph_id = Column(Integer, ForeignKey('graphs.id'))
-    graph = relation("Graph")
     points = relation("Vertex", secondary="vertex_to_rib", backref="ribs")
 
     def add_vertexes(self, start: Vertex, end: Vertex) -> None:
@@ -61,7 +59,6 @@ class Chain(SqlAlchemyBase):
     is_cycle = Column(Boolean, default=False)
     is_component = Column(Boolean, default=False)
     graph_id = Column(Integer, ForeignKey('graphs.id'))
-    graph = relation("Graph")
     ribs = relation("Rib", secondary="rib_to_chain", backref="chains")
 
     def add_ribs(self, *ribs: Rib) -> None:
@@ -84,9 +81,9 @@ class Graph(SqlAlchemyBase):
     min_cost_way = Column(Integer, default=inf)
     is_directed = Column(Boolean, default=False)
     is_connected = Column(Boolean, default=False)
-    points = relation("Vertex", back_populates='graph')
-    ribs = relation("Rib", back_populates='graph')
-    chains = relation("Chain", back_populates='graph')
+    points = relation("Vertex", backref="graph", cascade="all, delete-orphan")
+    ribs = relation("Rib", backref="graph", cascade="all, delete-orphan")
+    chains = relation("Chain", backref="graph", cascade="all, delete-orphan")
 
     def add_vertexes(self, *vertexes: Vertex) -> None:
         """Метод добавления вершин в граф"""
