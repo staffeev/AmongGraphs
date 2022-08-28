@@ -25,5 +25,6 @@ def create_ribs(graph: Graph) -> dict:
     ribs = {}
     for rib in graph.ribs:
         ribs[rib.points[0].name, rib.points[1].name] = rib.weight
-        ribs[rib.points[1].name, rib.points[0].name] = rib.weight
+        if not rib.is_directed:
+            ribs[rib.points[1].name, rib.points[0].name] = rib.weight
     return ribs

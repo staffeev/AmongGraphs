@@ -60,6 +60,10 @@ class Rib(SqlAlchemyBase):
         """Метод для изменения веса ребра"""
         self.weight = value
 
+    def change_dir(self, value: bool) -> None:
+        """Метод для создания (удаления) направления ребра"""
+        self.is_directed = int(value)
+
     def __str__(self):
         return f"{self.points[0].name}-{self.points[1].name}"
 

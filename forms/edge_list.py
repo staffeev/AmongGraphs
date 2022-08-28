@@ -21,11 +21,17 @@ class EdgeList(QWidget):
         self.deleteEdge.clicked.connect(self.deleteRow)
         self.saveChanges.clicked.connect(self.save)
         self.table.itemChanged.connect(self.changeItem)
+        # self.table.itemClicked.connect(self.changeCheckbox)
         self.loadTable()
 
     def changeItem(self, item) -> None:
         """Метод для сохранения изменений в таблице"""
         self.modified[item.row(), item.column()] = item.text()
+
+    def changeCheckbox(self) -> None:
+        """Метод для сохранения изменения состояния флажков"""
+        sender = self.sender()
+        self.modified[sender.index, 3] = sender.isChecked()
 
     def loadTable(self) -> None:
         """Метод для загрузки данных в таблицу"""
@@ -39,8 +45,9 @@ class EdgeList(QWidget):
             self.table.setItem(i, 0, QTableWidgetItem(rib.points[0].name))
             self.table.setItem(i, 1, QTableWidgetItem(rib.points[1].name))
             self.table.setItem(i, 2, QTableWidgetItem(str(rib.weight)))
-            item = TableCheckbox()
+            item = TableCheckbox(i)
             item.setState(rib.is_directed)
+            item.checkbox.clicked.connect(self.changeCheckbox)
             self.table.setCellWidget(i, 3, item)
         self.table.resizeRowsToContents()
         self.modified = {}
@@ -51,6 +58,9 @@ class EdgeList(QWidget):
         if not self.checkComplete():
             return
         self.table.insertRow(self.table.rowCount())
+        item = TableCheckbox(self.table.rowCount() - 1)
+        item.checkbox.clicked.connect(self.changeCheckbox)
+        self.table.setCellWidget(self.table.rowCount() - 1, 3, item)
         v1, v2, rib = get_new_rib()
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
@@ -79,13 +89,17 @@ class EdgeList(QWidget):
         """Метод сохранения изменений в БД"""
         if not self.checkComplete():
             return
+        print(self.modified)
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
         for i, j in self.modified:
             if j < 2:
                 graph.ribs[i].points[j].rename(self.modified[i, j])
-            else:
+            elif j == 2:
                 graph.ribs[i].change_weight(int(self.modified[i, j]))
+            else:
+                print('TETSTSTSTTS')
+                graph.ribs[i].change_dir(self.modified[i, j])
         session.commit()
         self.modified = {}
         self.parent.showTreeOfElements()
@@ -96,7 +110,7 @@ class EdgeList(QWidget):
         idx = self.table.rowCount()
         if not idx:
             return True
-        if any(self.table.item(idx - 1, i) is None for i in range(4)):
+        if any(self.table.item(idx - 1, i) is None for i in range(3)):
             QMessageBox.critical(self, "Error", CANNOT_ADD)
             return False
         return True

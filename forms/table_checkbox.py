@@ -5,9 +5,10 @@ from PyQt5.QtCore import Qt
 
 class TableCheckbox(QWidget):
     """Класс для флажка в ячейке таблицы"""
-    def __init__(self):
+    def __init__(self, index: int) -> None:
         super().__init__()
         self.checkbox = QCheckBox()
+        self.checkbox.index = index
         hl = QHBoxLayout()
         hl.setAlignment(Qt.AlignCenter)
         hl.addWidget(self.checkbox)

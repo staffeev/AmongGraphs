@@ -45,6 +45,7 @@ class ChooseGraphForm(QDialog):
         if found_names:
             self.list.addItems(found_names)
         else:
+            self.list.setEnabled(False)
             self.list.addItems([NO_GRAPHS_WITH_NAME])
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
