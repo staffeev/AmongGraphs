@@ -1,5 +1,6 @@
 import sys
 from forms.name_the_graph import CreateGraphForm
+from forms.choose_graph import ChooseGraphForm
 from models.elements import Graph
 from functions import get_graph_names
 from PyQt5 import uic
@@ -45,8 +46,6 @@ class Mentor(QMainWindow):
             session.add(graph)
             session.commit()
         session.close()
-        # TODO: create graph
-        pass
 
     def openGraph(self) -> None:
         """Метод для открытия графа"""
@@ -55,8 +54,15 @@ class Mentor(QMainWindow):
 
     def deleteGraph(self) -> None:
         """Метод для удаления графа"""
-        # TODO: delete graph
-        pass
+        session = db_session.create_session()
+        form = ChooseGraphForm(get_graph_names(session), self)
+        if form.exec():
+            graph = session.query(Graph).filter(
+                Graph.name == form.name_to_return
+            ).first()
+            session.delete(graph)
+            session.commit()
+        session.close()
 
     def saveChanges(self) -> None:
         """Метод для сохранения изменений"""
