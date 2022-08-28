@@ -75,7 +75,7 @@ class Graph(SqlAlchemyBase):
     __tablename__ = "graphs"
     serialize_rules = ('-ribs', '-points', '-chains')
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String, nullable=False)
+    name = Column(String, nullable=False, unique=True)
     num_of_vertex = Column(Integer)
     num_of_ribs = Column(Integer)
     num_of_cutpoints = Column(Integer)

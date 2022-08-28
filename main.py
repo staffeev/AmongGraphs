@@ -1,4 +1,7 @@
 import sys
+from forms.name_the_graph import CreateGraphForm
+from models.elements import Graph
+from functions import get_graph_names
 from PyQt5 import uic
 from PyQt5.QtWidgets import QMainWindow, QApplication
 from PyQt5.QtGui import QResizeEvent, QCloseEvent
@@ -28,17 +31,25 @@ class Mentor(QMainWindow):
         # События меню
         self.actionCreate.triggered.connect(self.createGraph)
         self.actionOpen.triggered.connect(self.openGraph)
+        self.actionDelete.triggered.connect(self.deleteGraph)
         self.actionSave.triggered.connect(self.saveChanges)
         self.actionExit.triggered.connect(self.close)
         # Остальные события
 
     def createGraph(self) -> None:
         """Метод для создания графа"""
+        session = db_session.create_session()
+        form = CreateGraphForm(get_graph_names(session), self)
+        if form.exec():  # Создание графа
+            graph = Graph(name=form.inputData.text())
+            session.add(graph)
+            session.commit()
+        session.close()
         # TODO: create graph
         pass
 
     def openGraph(self) -> None:
-        """Метод для откытия графа"""
+        """Метод для открытия графа"""
         # TODO: open graph
         pass
 
@@ -51,7 +62,6 @@ class Mentor(QMainWindow):
         """Метод для сохранения изменений"""
         # TODO: save changes
         pass
-
 
     def resizeEvent(self, event: QResizeEvent) -> None:
         """Обработчик изменения размера окна"""
@@ -71,4 +81,3 @@ if __name__ == '__main__':
     programme.show()
     sys.excepthook = except_hook
     sys.exit(app.exec())
-

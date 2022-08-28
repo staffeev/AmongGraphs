@@ -109,6 +109,7 @@
     </widget>
     <addaction name="actionCreate"/>
     <addaction name="actionOpen"/>
+    <addaction name="actionDelete"/>
     <addaction name="separator"/>
     <addaction name="actionSave"/>
     <addaction name="menuSave_as"/>
@@ -198,11 +199,19 @@
    </property>
    <property name="font">
     <font>
-     <pointsize>5</pointsize>
+     <pointsize>8</pointsize>
     </font>
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+C</string>
+   </property>
+  </action>
+  <action name="actionDelete">
+   <property name="text">
+    <string>Delete</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
    </property>
   </action>
  </widget>
