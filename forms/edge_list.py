@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QWidget, QTableWidgetItem, QHeaderView, QMessageBox
 from PyQt5 import uic
-from settings import CANNOT_ADD
+from settings import CANNOT_ADD, ARE_YOU_SURE
 from functions import get_new_rib, get_graph_by_name
 from models import db_session
 
@@ -47,15 +47,26 @@ class EdgeList(QWidget):
         self.table.insertRow(self.table.rowCount())
         v1, v2, rib = get_new_rib()
         session = db_session.create_session()
-        graph = get_graph_by_name(self.session, self.graph_name)
+        graph = get_graph_by_name(session, self.graph_name)
         graph.add_ribs(rib)
         session.add_all([v1, v2, rib])
         session.commit()
         session.close()
 
-    def deleteRow(self):
+    def deleteRow(self) -> None:
         """Метод для удаления ребра из таблицы"""
-        pass
+        idx = {i.row() for i in self.table.selectedIndexes()}
+        session = db_session.create_session()
+        graph = get_graph_by_name(session, self.graph_name)
+        ribs = [graph.ribs[i] for i in idx]
+        flag = QMessageBox.question(
+            self, "Delete ribs", f"{ARE_YOU_SURE} ribs {', '.join(map(str, ribs))}"
+        )
+        if flag == QMessageBox.No:
+            return
+        [session.delete(rib) for rib in ribs]
+        session.commit()
+        session.close()
 
     def save(self) -> None:
         """Метод сохранения изменений в БД"""

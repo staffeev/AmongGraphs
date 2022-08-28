@@ -73,7 +73,7 @@ class ChooseGraphForm(QDialog):
             return
         if self.to_delete:
             flag = QMessageBox.question(
-                self, "Delete", f"{ARE_YOU_SURE} {self.name_to_return}"
+                self, "Delete", f"{ARE_YOU_SURE} graph {self.name_to_return}"
             )
         if flag == QMessageBox.Yes:
             self.done(1)

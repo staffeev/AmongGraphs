@@ -159,13 +159,6 @@ class Mentor(QMainWindow):
         p = ImageQt(self.image)
         # Устанавливаем в метку изображение
         self.canvas.setPixmap(QPixmap.fromImage(p))
-        # self.im_lab.resize(self.width(), self.height() - 68)
-
-    # def updateGraph(self) -> None:
-    #     """Метод обновления графа"""
-    #     session = db_session.create_session()
-    #     self.graph = get_graph_by_name(session, self.graph_name)
-    #     session.close()
 
     def closeEvent(self, event: QCloseEvent) -> None:
         """Обработка закрытия программы"""

@@ -1,6 +1,6 @@
 import sqlalchemy
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
-from sqlalchemy.orm import relation, relationship, backref
+from sqlalchemy.orm import relation
 from .db_session import SqlAlchemyBase
 from math import inf
 
@@ -49,7 +49,7 @@ class Rib(SqlAlchemyBase):
     is_bridge = Column(Boolean, default=False)
     graph_id = Column(Integer, ForeignKey('graphs.id'))
     points = relation("Vertex", secondary="vertex_to_rib",
-                      back_populates="ribs")
+                      back_populates="ribs", cascade="all, delete")
 
     def add_vertexes(self, start: Vertex, end: Vertex) -> None:
         """Метод добавления начальной и конечной вершины ребра"""
