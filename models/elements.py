@@ -59,6 +59,7 @@ class Chain(SqlAlchemyBase):
     id = Column(Integer, primary_key=True, autoincrement=True)
     length = Column(Integer)
     is_cycle = Column(Boolean, default=False)
+    is_component = Column(Boolean, default=False)
     graph_id = Column(Integer, ForeignKey('graphs.id'))
     graph = relation("Graph")
     ribs = relation("Rib", secondary="rib_to_chain", backref="chains")

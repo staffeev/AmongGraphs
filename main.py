@@ -42,6 +42,11 @@ class Mentor(QMainWindow):
         # TODO: open graph
         pass
 
+    def deleteGraph(self) -> None:
+        """Метод для удаления графа"""
+        # TODO: delete graph
+        pass
+
     def saveChanges(self) -> None:
         """Метод для сохранения изменений"""
         # TODO: save changes
