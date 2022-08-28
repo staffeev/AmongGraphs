@@ -37,17 +37,17 @@
      <rect>
       <x>0</x>
       <y>0</y>
-      <width>221</width>
-      <height>151</height>
+      <width>801</width>
+      <height>571</height>
      </rect>
     </property>
     <widget class="QWidget" name="horizontalLayoutWidget">
      <property name="geometry">
       <rect>
-       <x>10</x>
-       <y>20</y>
-       <width>160</width>
-       <height>80</height>
+       <x>0</x>
+       <y>0</y>
+       <width>791</width>
+       <height>571</height>
       </rect>
      </property>
      <layout class="QHBoxLayout" name="hl">
@@ -62,7 +62,7 @@
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>
-        <widget class="QListWidget" name="graph_list"/>
+        <widget class="QTreeView" name="graph_list"/>
         <widget class="QLabel" name="canvas">
          <property name="text">
           <string>TextLabel</string>

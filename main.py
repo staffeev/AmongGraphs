@@ -75,15 +75,9 @@ class Mentor(QMainWindow):
         # TODO: save changes
         pass
 
-    def resizeEvent(self, event: QResizeEvent) -> None:
-        """Обработчик изменения размера окна"""
-        # TODO: resize event
-        pass
+    def showTreeOfElements(self) -> None:
+        """Метод для построения дерева элементов графа"""
 
-    def closeEvent(self, event: QCloseEvent) -> None:
-        """Событие закрытия приложения"""
-        # TODO: close DB
-        print('Bye')
 
 
 if __name__ == '__main__':
