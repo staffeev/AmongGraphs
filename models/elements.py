@@ -55,7 +55,7 @@ class Rib(SqlAlchemyBase):
 class Chain(SqlAlchemyBase):
     """Класс для модели цепи в графе"""
     __tablename__ = "chains"
-    serialize_rules = ('-points', '-graph')
+    serialize_rules = ('-ribs', '-graph')
     id = Column(Integer, primary_key=True, autoincrement=True)
     length = Column(Integer)
     is_cycle = Column(Boolean, default=False)
@@ -71,6 +71,7 @@ class Chain(SqlAlchemyBase):
 class Graph(SqlAlchemyBase):
     """Классс для модели графа"""
     __tablename__ = "graphs"
+    serialize_rules = ('-ribs', '-points', '-chains')
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, nullable=False)
     num_of_vertex = Column(Integer)
