@@ -18,6 +18,7 @@ class Mentor(QMainWindow):
     def __init__(self) -> None:
         super().__init__()
         uic.loadUi('UI/main.ui', self)
+        self.graph = None
         self.splitter.setSizes([200, 600])
         self.widget.setLayout(self.hl)
         self.setCentralWidget(self.widget)
@@ -49,13 +50,18 @@ class Mentor(QMainWindow):
 
     def openGraph(self) -> None:
         """Метод для открытия графа"""
-        # TODO: open graph
-        pass
+        session = db_session.create_session()
+        form = ChooseGraphForm(get_graph_names(session), False, self)
+        if form.exec():
+            self.graph = session.query(Graph).filter(
+                Graph.name == form.name_to_return
+            ).first()
+        session.close()
 
     def deleteGraph(self) -> None:
         """Метод для удаления графа"""
         session = db_session.create_session()
-        form = ChooseGraphForm(get_graph_names(session), self)
+        form = ChooseGraphForm(get_graph_names(session), True, self)
         if form.exec():
             graph = session.query(Graph).filter(
                 Graph.name == form.name_to_return

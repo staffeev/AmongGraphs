@@ -6,11 +6,12 @@ from PyQt5.QtCore import Qt
 
 class ChooseGraphForm(QDialog):
     """Класс формы для выбора графа"""
-    def __init__(self, names: list, to_delete: bool = False, parent=None) -> None:
+    def __init__(self, names: list, to_delete: bool, parent=None) -> None:
         super().__init__(parent)
         self.names = names
         self.name_to_return = None
         self.to_delete = to_delete
+        print(to_delete)
         self.setWindowTitle("Choose graph")
         self.buttonBox = QDialogButtonBox(
             QDialogButtonBox.Ok | QDialogButtonBox.Cancel
