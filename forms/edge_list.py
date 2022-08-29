@@ -20,6 +20,9 @@ class EdgeList(QWidget):
         self.addEdge.clicked.connect(self.addRow)
         self.deleteEdge.clicked.connect(self.deleteRow)
         self.saveChanges.clicked.connect(self.save)
+        header = self.table.horizontalHeader()
+        for i in range(self.table.columnCount()):
+            header.setSectionResizeMode(i, QHeaderView.Stretch)
         self.table.itemChanged.connect(self.changeItem)
         self.table.selectionModel().selectionChanged.connect(self.checkUnselected)
         self.loadTable()
@@ -76,16 +79,11 @@ class EdgeList(QWidget):
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
         self.table.setRowCount(len(graph.ribs))
-        header = self.table.horizontalHeader()
-        for i in range(self.table.columnCount()):
-            header.setSectionResizeMode(i, QHeaderView.Stretch)
         for i, rib in enumerate(graph.ribs):
             self.table.setItem(i, 0, QTableWidgetItem(rib.points[0].name))
             self.table.setItem(i, 1, QTableWidgetItem(rib.points[1].name))
             self.table.setItem(i, 2, QTableWidgetItem(str(rib.weight)))
-            item = TableCheckbox(i)
-            item.setState(rib.is_directed)
-            item.checkbox.clicked.connect(self.changeCheckbox)
+            item = self.get_table_checkbox(i, rib.is_directed)
             self.table.setCellWidget(i, 3, item)
         self.table.resizeRowsToContents()
         self.modified = {}
@@ -100,9 +98,7 @@ class EdgeList(QWidget):
         self.table.setRangeSelected(QTableWidgetSelectionRange(
             last_row + 1, 0, last_row + 1, last_col), True
         )
-        item = TableCheckbox(last_row + 1)
-        item.setState(False)
-        item.checkbox.clicked.connect(self.changeCheckbox)
+        item = self.get_table_checkbox(last_row + 1, False)
         self.table.setCellWidget(last_row + 1, last_col, item)
         v1, v2, rib = get_new_rib()
         session = db_session.create_session()
@@ -158,3 +154,11 @@ class EdgeList(QWidget):
     def get_last_indexes(self):
         """Метод, возвращающий индекс правого нижнего элемента таблицы"""
         return self.get_last_row(), self.get_last_col()
+
+    def get_table_checkbox(self, row: int, value: bool) -> TableCheckbox:
+        """Метод, возвращающий флажок для ячейки таблицы"""
+        item = TableCheckbox(row)
+        item.setState(value)
+        item.checkbox.clicked.connect(self.changeCheckbox)
+        return item
+

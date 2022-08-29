@@ -13,9 +13,8 @@ from functions import get_graph_names, create_ribs, get_graph_by_name
 from PyQt5.Qt import QStandardItemModel
 from PyQt5 import uic
 from PyQt5.QtGui import QCloseEvent
-from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QMainWindow, QApplication
-from PyQt5.QtGui import QPixmap, QKeyEvent
+from PyQt5.QtGui import QPixmap
 from models import db_session
 import io
 from PIL import Image
@@ -40,6 +39,7 @@ class Mentor(QMainWindow):
         self.rootNode = self.treeModel.invisibleRootItem()
         self.graph_list.setModel(self.treeModel)
         self.window = None
+        self.image = None
         self.initUI()
 
     def initUI(self) -> None:
