@@ -34,11 +34,12 @@ class EdgeList(QWidget):
         self.table.selectionModel().selectionChanged.connect(
             self.checkUnselected)
 
-    def checkUnselected(self, unselected):
+    def checkUnselected(self, _, unselected):
         """Обработчик валидности невыделенных ячеек"""
         if len(unselected.indexes()) != 1:
             return True
         last_cell = unselected.indexes()[0]
+        print(last_cell.row(), last_cell.column())
         return self.validCell(last_cell.row(), last_cell.column())
 
     def validCell(self, row, col):
