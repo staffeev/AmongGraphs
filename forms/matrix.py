@@ -27,7 +27,6 @@ class GraphMatrix(QWidget):
         self.matrix.itemChanged.connect(self.changeItem)
         self.matrix.selectionModel().selectionChanged.connect(
             self.checkUnselected)
-        self.stretchTable()
 
     def stretchTable(self) -> None:
         """Метод, растягивающий таблицу на всю допустимую ширину и высоту"""
@@ -43,6 +42,7 @@ class GraphMatrix(QWidget):
         nodes = get_graph_nodes(session, self.graph_name)
         self.matrix.setHorizontalHeaderLabels(nodes)
         self.matrix.setVerticalHeaderLabels(nodes)
+        session.close()
 
     def changeItem(self, item) -> None:
         """Метод для сохранения изменений в таблице"""
@@ -83,19 +83,22 @@ class GraphMatrix(QWidget):
         graph = get_graph_by_name(session, self.graph_name)
         ribs = create_ribs(graph)
         nodes = get_graph_nodes(session, self.graph_name)
-        self.nameHeaders()
         self.matrix.setRowCount(len(nodes))
         self.matrix.setColumnCount(len(nodes))
+        self.nameHeaders()
         for i, node1 in enumerate(nodes):
             for j, node2 in enumerate(nodes):
-                self.matrix.setItem(i, j, QItem(ribs.get((i, j), '')))
+                self.matrix.setItem(
+                    i, j, QItem(str(ribs.get((str(node1), str(node2)), '')))
+                )
+        self.stretchTable()
         self.matrix.resizeRowsToContents()
         self.matrix.resizeColumnsToContents()
         session.close()
 
     def addNode(self) -> None:
         """Метод для добавления вершины в граф"""
-        pass
+
 
     def deleteNode(self) -> None:
         """Метод для удаления вершины из графа"""

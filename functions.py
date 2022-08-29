@@ -49,3 +49,8 @@ def create_ribs(graph: Graph) -> dict:
         if not rib.is_directed:
             ribs[rib.nodes[1].name, rib.nodes[0].name] = rib.weight
     return ribs
+
+
+def create_matrix(graph: Graph) -> list[list]:
+    # TODO: create matrix
+    pass
