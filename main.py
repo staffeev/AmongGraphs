@@ -17,7 +17,7 @@ from PyQt5.QtGui import QCloseEvent
 from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox
 from PyQt5.QtGui import QPixmap
 from models import db_session
-from settings import NOT_OPEN
+from settings import NOT_OPEN, ENTER_GRAPH
 import io
 from PIL import Image
 
@@ -71,7 +71,7 @@ class Mentor(QMainWindow):
     def createGraph(self) -> None:
         """Метод для создания графа"""
         session = db_session.create_session()
-        form = AddNewData(get_graph_names(session), self)
+        form = AddNewData(get_graph_names(session), ENTER_GRAPH, self)
         if form.exec():  # Создание графа
             graph = Graph(name=form.inputData.text())
             session.add(graph)

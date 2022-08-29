@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QWidget, QHeaderView, QMessageBox, \
 from PyQt5 import uic
 from functions import str_is_float, get_graph_by_name, create_ribs, \
     get_graph_nodes
-from settings import ARE_YOU_SURE
+from settings import ARE_YOU_SURE, ENTER_NODE
 from forms.add_new_data_form import AddNewData
 from models import db_session
 from models.elements import Graph, Rib, Vertex
@@ -52,14 +52,16 @@ class GraphMatrix(QWidget):
         """Метод для переименования вершины графа"""
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
-        form = AddNewData(get_graph_nodes(session, self.graph_name))
+        form = AddNewData(get_graph_nodes(session, self.graph_name), ENTER_NODE)
         if not form.exec():
             session.close()
             return
-
+        new_name = form.inputData.text()
+        self.matrix.horizontalHeaderItem(index).setText(new_name)
+        self.matrix.verticalHeaderItem(index).setText(new_name)
+        graph.nodes[index].rename(form.inputData.text())
+        session.commit()
         session.close()
-        print(index)
-        pass
 
     def changeItem(self, item) -> None:
         """Метод для сохранения изменений в таблице"""

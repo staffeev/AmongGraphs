@@ -5,7 +5,7 @@ from settings import ALREADY_EXISTS, EMPTY
 
 class AddNewData(QDialog):
     """Класс диалогового окна для добавленния новой информации"""
-    def __init__(self, existing_names: list, parent=None) -> None:
+    def __init__(self, existing_names: list, text=None, parent=None) -> None:
         super().__init__(parent)
         self.names = existing_names
         self.setWindowTitle("Enter data")
@@ -15,7 +15,7 @@ class AddNewData(QDialog):
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
         self.layout = QVBoxLayout()
-        self.label = QLabel("Enter data:")
+        self.label = QLabel(text)
         self.layout.addWidget(self.label)
         self.inputData = QLineEdit()
         self.layout.addWidget(self.inputData)
