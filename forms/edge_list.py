@@ -133,7 +133,7 @@ class EdgeList(QWidget):
             if j < 2:
                 graph.ribs[i].points[j].rename(self.modified[i, j])
             elif j == 2:
-                graph.ribs[i].change_weight(int(self.modified[i, j]))
+                graph.ribs[i].change_weight(float(self.modified[i, j]))
             else:
                 print('TETSTSTSTTS')
                 graph.ribs[i].change_dir(self.modified[i, j])
@@ -147,10 +147,7 @@ class EdgeList(QWidget):
         idx = self.get_last_row()
         if idx <= 0:
             return True
-        if not all(self.validCell(idx, i) for i in range(3)):
-            QMessageBox.critical(self, "Error", CANNOT_ADD)
-            return False
-        return True
+        return all(self.validCell(idx, i) for i in range(3))
 
     def get_last_row(self):
         """Метод, возвращающий индекс последней строки таблицы"""

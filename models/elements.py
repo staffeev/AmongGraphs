@@ -1,5 +1,5 @@
 import sqlalchemy
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Float
 from sqlalchemy.orm import relation
 from .db_session import SqlAlchemyBase
 from math import inf
@@ -44,7 +44,7 @@ class Rib(SqlAlchemyBase):
     __tablename__ = "ribs"
     serialize_rules = ('-points', '-graph')
     id = Column(Integer, primary_key=True, autoincrement=True)
-    weight = Column(Integer, default=1)
+    weight = Column(Float, default=1)
     is_directed = Column(Boolean, default=False)
     is_bridge = Column(Boolean, default=False)
     graph_id = Column(Integer, ForeignKey('graphs.id'))
@@ -56,7 +56,7 @@ class Rib(SqlAlchemyBase):
         self.points.append(start)
         self.points.append(end)
 
-    def change_weight(self, value: int) -> None:
+    def change_weight(self, value: float) -> None:
         """Метод для изменения веса ребра"""
         self.weight = value
 
