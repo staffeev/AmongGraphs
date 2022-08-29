@@ -2,8 +2,11 @@ from models import db_session
 from models.elements import *
 
 
-db_session.global_init('graphs.db')
-session = db_session.create_session()
+d = {1: '', 2: '', 3: ''}
+[d.update({i: i}) for i in range(3)]
+print(d)
+# db_session.global_init('graphs.db')
+# session = db_session.create_session()
 # v = Vertex(name="a")
 # v2 = Vertex(name="b")
 # v3 = Vertex(name="c")
@@ -12,12 +15,12 @@ session = db_session.create_session()
 # r.add_vertexes(v, v2)
 # r2.add_vertexes(v2, v3)
 # session.add_all([v, v2, v3, r, r2])
-v = session.query(Vertex).first()
-print(session.query(Rib).all())
-print(session.query(Vertex).all())
-session.delete(v)
-print(session.query(Rib).all())
-print(session.query(Vertex).all())
+# v = session.query(Vertex).first()
+# print(session.query(Rib).all())
+# print(session.query(Vertex).all())
+# session.delete(v)
+# print(session.query(Rib).all())
+# print(session.query(Vertex).all())
 # print(session.query(Vertex).all())
 # r = session.query(Rib).first()
 # session.delete(r)

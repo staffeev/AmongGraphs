@@ -16,6 +16,7 @@ class EdgeList(QWidget):
         self.parent = parent
         self.graph_name = graph_name
         self.modified = {}
+        self.can_save = False
         self.setLayout(self.vl)
         self.addEdge.clicked.connect(self.addRow)
         self.deleteEdge.clicked.connect(self.deleteRow)
@@ -103,6 +104,7 @@ class EdgeList(QWidget):
         v1, v2, rib = get_new_rib()
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
+        [self.modified.update({(last_row + 1, i): ''}) for i in range(3)]
         graph.add_ribs(rib)
         session.add_all([v1, v2, rib])
         session.commit()
@@ -128,20 +130,21 @@ class EdgeList(QWidget):
         """Метод сохранения изменений в БД"""
         if not self.checkComplete():
             return
+        print(self.modified)
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
         [graph.ribs[i].change_attrs(j, self.modified[i, j]) for i, j in self.modified]
         session.commit()
         self.modified = {}
-        self.parent.showTreeOfElements()
-        self.parent.draw_graph()
+        # self.parent.showTreeOfElements()
+        # self.parent.draw_graph()
 
     def checkComplete(self) -> bool:
         """Метод проверки заполненности полей последней строки таблицы"""
         idx = self.get_last_row()
         if idx <= 0:
             return True
-        return all(self.validCell(idx, i) for i in range(3))
+        return all(self.validCell(i, j) for i, j in self.modified)
 
     def get_last_row(self):
         """Метод, возвращающий индекс последней строки таблицы"""
