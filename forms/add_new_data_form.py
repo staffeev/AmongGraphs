@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QVBoxLayout, QLabel, \
     QLineEdit, QMessageBox
-from settings import ALREADY_EXISTS
+from settings import ALREADY_EXISTS, EMPTY
 
 
 class AddNewData(QDialog):
@@ -24,7 +24,9 @@ class AddNewData(QDialog):
 
     def accept(self) -> None:
         """Обработчик события нажатия на кнопку ОК"""
-        if self.inputData.text() in self.names:
+        if not self.inputData.text():
+            QMessageBox.warning(self, "Warning", EMPTY)
+        elif self.inputData.text() in self.names:
             QMessageBox.critical(self, "Error", ALREADY_EXISTS)
         else:
             self.done(1)

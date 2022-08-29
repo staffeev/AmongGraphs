@@ -29,6 +29,8 @@ class GraphMatrix(QWidget):
         self.matrix.itemChanged.connect(self.changeItem)
         self.matrix.selectionModel().selectionChanged.connect(
             self.checkUnselected)
+        self.matrix.horizontalHeader().sectionDoubleClicked.connect(self.renameNode)
+        self.matrix.verticalHeader().sectionDoubleClicked.connect(self.renameNode)
 
     def stretchTable(self) -> None:
         """Метод, растягивающий таблицу на всю допустимую ширину и высоту"""
@@ -45,6 +47,19 @@ class GraphMatrix(QWidget):
         self.matrix.setHorizontalHeaderLabels(nodes)
         self.matrix.setVerticalHeaderLabels(nodes)
         session.close()
+
+    def renameNode(self, index: int) -> None:
+        """Метод для переименования вершины графа"""
+        session = db_session.create_session()
+        graph = get_graph_by_name(session, self.graph_name)
+        form = AddNewData(get_graph_nodes(session, self.graph_name))
+        if not form.exec():
+            session.close()
+            return
+
+        session.close()
+        print(index)
+        pass
 
     def changeItem(self, item) -> None:
         """Метод для сохранения изменений в таблице"""
@@ -67,8 +82,6 @@ class GraphMatrix(QWidget):
     def validEmpty(self, row: int, col: int) -> bool:
         """Проверка отсутствия значения в ячейке"""
         try:
-            # if row > self.get_last_row():
-            #     return True
             if not self.table.item(row, col).text():
                 raise AttributeError
             return False
@@ -125,7 +138,7 @@ class GraphMatrix(QWidget):
         graph = get_graph_by_name(session, self.graph_name)
         nodes = [graph.nodes[i] for i in selected]
         flag = QMessageBox.question(
-            self, "Delete ribs",
+            self, "Delete nodes",
             f"{ARE_YOU_SURE} nodes {', '.join(map(str, nodes))}"
         )
         if flag == QMessageBox.No:
