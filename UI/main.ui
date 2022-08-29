@@ -23,7 +23,7 @@
    </size>
   </property>
   <property name="windowTitle">
-   <string>MainWindow</string>
+   <string>AmongGraphs</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <property name="sizePolicy">
@@ -37,17 +37,17 @@
      <rect>
       <x>0</x>
       <y>0</y>
-      <width>221</width>
-      <height>151</height>
+      <width>801</width>
+      <height>571</height>
      </rect>
     </property>
     <widget class="QWidget" name="horizontalLayoutWidget">
      <property name="geometry">
       <rect>
-       <x>10</x>
-       <y>20</y>
-       <width>160</width>
-       <height>80</height>
+       <x>0</x>
+       <y>0</y>
+       <width>791</width>
+       <height>571</height>
       </rect>
      </property>
      <layout class="QHBoxLayout" name="hl">
@@ -62,7 +62,7 @@
         <property name="orientation">
          <enum>Qt::Horizontal</enum>
         </property>
-        <widget class="QListWidget" name="graph_list"/>
+        <widget class="QTreeView" name="graph_list"/>
         <widget class="QLabel" name="canvas">
          <property name="text">
           <string>TextLabel</string>
@@ -88,6 +88,11 @@
      <string>Edit</string>
     </property>
     <addaction name="actionUndo"/>
+    <addaction name="separator"/>
+    <addaction name="actionEdit_matrix"/>
+    <addaction name="actionEdit_list"/>
+    <addaction name="separator"/>
+    <addaction name="actionLoad_csv"/>
    </widget>
    <widget class="QMenu" name="menuHelp">
     <property name="title">
@@ -109,6 +114,7 @@
     </widget>
     <addaction name="actionCreate"/>
     <addaction name="actionOpen"/>
+    <addaction name="actionDelete"/>
     <addaction name="separator"/>
     <addaction name="actionSave"/>
     <addaction name="menuSave_as"/>
@@ -116,9 +122,16 @@
     <addaction name="actionSettings"/>
     <addaction name="actionExit"/>
    </widget>
+   <widget class="QMenu" name="menuDraw">
+    <property name="title">
+     <string>Draw</string>
+    </property>
+    <addaction name="actionDraw"/>
+   </widget>
    <addaction name="menuFIle"/>
    <addaction name="menuEdit"/>
    <addaction name="menuHelp"/>
+   <addaction name="menuDraw"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <action name="actionCreate">
@@ -198,11 +211,42 @@
    </property>
    <property name="font">
     <font>
-     <pointsize>5</pointsize>
+     <pointsize>8</pointsize>
     </font>
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+C</string>
+   </property>
+  </action>
+  <action name="actionDelete">
+   <property name="text">
+    <string>Delete</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
+   </property>
+  </action>
+  <action name="actionEdit_matrix">
+   <property name="text">
+    <string>Edit as matrix</string>
+   </property>
+  </action>
+  <action name="actionEdit_list">
+   <property name="text">
+    <string>Edit as list of edges</string>
+   </property>
+  </action>
+  <action name="actionLoad_csv">
+   <property name="text">
+    <string>Load data from csv-table</string>
+   </property>
+  </action>
+  <action name="actionDraw">
+   <property name="text">
+    <string>Draw graph</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+S</string>
    </property>
   </action>
  </widget>

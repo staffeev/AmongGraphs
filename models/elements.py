@@ -1,8 +1,9 @@
 import sqlalchemy
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Float
 from sqlalchemy.orm import relation
 from .db_session import SqlAlchemyBase
 from math import inf
+from typing import Union
 
 
 association_table = sqlalchemy.Table(
@@ -28,10 +29,15 @@ class Vertex(SqlAlchemyBase):
     __tablename__ = 'vertexes'
     serialize_rules = ('-ribs_', '-chains_', '-graph')
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String, nullable=False)
+    name = Column(String)
     is_cutpoint = Column(Boolean, default=False)
     graph_id = Column(Integer, ForeignKey('graphs.id'))
-    graph = relation("Graph")
+    ribs = relation("Rib", secondary="vertex_to_rib",
+                    back_populates="points", cascade="all, delete")
+
+    def rename(self, name: str) -> None:
+        """Метод для переименования вершины"""
+        self.name = name.strip()
 
 
 class Rib(SqlAlchemyBase):
@@ -39,17 +45,37 @@ class Rib(SqlAlchemyBase):
     __tablename__ = "ribs"
     serialize_rules = ('-points', '-graph')
     id = Column(Integer, primary_key=True, autoincrement=True)
-    weigth = Column(Integer, default=1)
+    weight = Column(Float, default=1)
     is_directed = Column(Boolean, default=False)
     is_bridge = Column(Boolean, default=False)
     graph_id = Column(Integer, ForeignKey('graphs.id'))
-    graph = relation("Graph")
-    points = relation("Vertex", secondary="vertex_to_rib", backref="ribs")
+    points = relation("Vertex", secondary="vertex_to_rib",
+                      back_populates="ribs")
 
     def add_vertexes(self, start: Vertex, end: Vertex) -> None:
         """Метод добавления начальной и конечной вершины ребра"""
         self.points.append(start)
         self.points.append(end)
+
+    def change_weight(self, value: float) -> None:
+        """Метод для изменения веса ребра"""
+        self.weight = value
+
+    def change_dir(self, value: bool) -> None:
+        """Метод для создания (удаления) направления ребра"""
+        self.is_directed = int(value)
+
+    def change_attrs(self, idx: int, arg: Union[str, float, bool]) -> None:
+        """Метод для изменения атрибутов объекта"""
+        if isinstance(arg, float):
+            self.change_weight(arg)
+        elif isinstance(arg, bool):
+            self.change_dir(arg)
+        elif isinstance(arg, str):
+            self.points[idx].rename(arg)
+
+    def __str__(self):
+        return f"{self.points[0].name}-{self.points[1].name}"
 
 
 class Chain(SqlAlchemyBase):
@@ -59,9 +85,10 @@ class Chain(SqlAlchemyBase):
     id = Column(Integer, primary_key=True, autoincrement=True)
     length = Column(Integer)
     is_cycle = Column(Boolean, default=False)
+    is_component = Column(Boolean, default=False)
     graph_id = Column(Integer, ForeignKey('graphs.id'))
-    graph = relation("Graph")
-    ribs = relation("Rib", secondary="rib_to_chain", backref="chains")
+    ribs = relation("Rib", secondary="rib_to_chain", backref="chains",
+                    cascade="all, delete")
 
     def add_ribs(self, *ribs: Rib) -> None:
         """Метод добавления ребер в цепь"""
@@ -73,7 +100,7 @@ class Graph(SqlAlchemyBase):
     __tablename__ = "graphs"
     serialize_rules = ('-ribs', '-points', '-chains')
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String, nullable=False)
+    name = Column(String, nullable=False, unique=True, index=True)
     num_of_vertex = Column(Integer)
     num_of_ribs = Column(Integer)
     num_of_cutpoints = Column(Integer)
@@ -83,9 +110,9 @@ class Graph(SqlAlchemyBase):
     min_cost_way = Column(Integer, default=inf)
     is_directed = Column(Boolean, default=False)
     is_connected = Column(Boolean, default=False)
-    points = relation("Vertex", back_populates='graph')
-    ribs = relation("Rib", back_populates='graph')
-    chains = relation("Chain", back_populates='graph')
+    points = relation("Vertex", backref="graph", cascade="all, delete-orphan")
+    ribs = relation("Rib", backref="graph", cascade="all, delete-orphan")
+    chains = relation("Chain", backref="graph", cascade="all, delete-orphan")
 
     def add_vertexes(self, *vertexes: Vertex) -> None:
         """Метод добавления вершин в граф"""
