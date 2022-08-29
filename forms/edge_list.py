@@ -130,6 +130,7 @@ class EdgeList(QWidget):
             self, "Delete ribs", f"{ARE_YOU_SURE} ribs {', '.join(map(str, ribs))}"
         )
         if flag == QMessageBox.No:
+            session.close()
             return
         [session.delete(rib) for rib in ribs]
         [self.modified.pop((i, j), None) for i in idx for j in range(self.table.columnCount())]

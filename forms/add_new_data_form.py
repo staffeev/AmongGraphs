@@ -3,8 +3,8 @@ from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QVBoxLayout, QLabel, \
 from settings import ALREADY_EXISTS
 
 
-class CreateGraphForm(QDialog):
-    """Класс диалогового окна для получения имени нового графа"""
+class AddNewData(QDialog):
+    """Класс диалогового окна для добавленния новой информации"""
     def __init__(self, existing_names: list, parent=None) -> None:
         super().__init__(parent)
         self.names = existing_names
@@ -15,7 +15,8 @@ class CreateGraphForm(QDialog):
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
         self.layout = QVBoxLayout()
-        self.layout.addWidget(QLabel("Enter the name of the graph:"))
+        self.label = QLabel("Enter data:")
+        self.layout.addWidget(self.label)
         self.inputData = QLineEdit()
         self.layout.addWidget(self.inputData)
         self.layout.addWidget(self.buttonBox)

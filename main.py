@@ -4,7 +4,7 @@ import networkx as nx
 from PIL.ImageQt import ImageQt
 from matplotlib import pyplot as plt
 
-from forms.name_the_graph import CreateGraphForm
+from forms.add_new_data_form import AddNewData
 from forms.choose_graph import ChooseGraphForm
 from forms.tree_element import TreeItem
 from forms.edge_list import EdgeList
@@ -71,7 +71,7 @@ class Mentor(QMainWindow):
     def createGraph(self) -> None:
         """Метод для создания графа"""
         session = db_session.create_session()
-        form = CreateGraphForm(get_graph_names(session), self)
+        form = AddNewData(get_graph_names(session), self)
         if form.exec():  # Создание графа
             graph = Graph(name=form.inputData.text())
             session.add(graph)

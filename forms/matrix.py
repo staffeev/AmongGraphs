@@ -3,8 +3,10 @@ from PyQt5.QtWidgets import QWidget, QHeaderView, QMessageBox, \
 from PyQt5 import uic
 from functions import str_is_float, get_graph_by_name, create_ribs, \
     get_graph_nodes
+from settings import ARE_YOU_SURE
+from forms.add_new_data_form import AddNewData
 from models import db_session
-from models.elements import Graph, Rib
+from models.elements import Graph, Rib, Vertex
 
 
 class GraphMatrix(QWidget):
@@ -91,19 +93,54 @@ class GraphMatrix(QWidget):
                 self.matrix.setItem(
                     i, j, QItem(str(ribs.get((str(node1), str(node2)), '')))
                 )
-        self.stretchTable()
         self.matrix.resizeRowsToContents()
         self.matrix.resizeColumnsToContents()
+        self.stretchTable()
         session.close()
+
+    def getSelectedRowsOrCols(self) -> set[int]:
+        """Метод, возвращающий индексы выделенных строк (столбов)"""
+        sel_rows = {}
+        sel_cols = {}
+        for el in self.matrix.selectedIndexes():
+            sel_rows[el.row()] = sel_rows.get(el.row(), 0) + 1
+            sel_cols[el.column()] = sel_cols.get(el.column(), 0) + 1
+        return self.countSelected(sel_rows) | self.countSelected(sel_cols)
+
+    def countSelected(self, values: dict[int]) -> set[int]:
+        """Метод, возвращающий полностью выделенные строки (столбцы) таблицы"""
+        num_cols = self.get_cols()
+        return set(filter(lambda x: values[x] == num_cols, values.keys()))
 
     def addNode(self) -> None:
         """Метод для добавления вершины в граф"""
-
+        # TODO: addNode
 
     def deleteNode(self) -> None:
         """Метод для удаления вершины из графа"""
-        pass
+        selected = self.getSelectedRowsOrCols()
+        if not selected:
+            return
+        session = db_session.create_session()
+        graph = get_graph_by_name(session, self.graph_name)
+        nodes = [graph.nodes[i] for i in selected]
+        flag = QMessageBox.question(
+            self, "Delete ribs",
+            f"{ARE_YOU_SURE} nodes {', '.join(map(str, nodes))}"
+        )
+        if flag == QMessageBox.No:
+            session.close()
+            return
+        [session.delete(node) for node in nodes]
+        session.commit()
+        session.close()
+        self.loadTable()
 
     def save(self) -> None:
         """Метод для сохранения изменений"""
+        #TODO: save
         pass
+
+    def get_cols(self) -> int:
+        """Метод, возвращающий количество столбцов в таблице"""
+        return self.matrix.columnCount()
