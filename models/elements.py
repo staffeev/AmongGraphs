@@ -39,6 +39,12 @@ class Vertex(SqlAlchemyBase):
         """Метод для переименования вершины"""
         self.name = name.strip()
 
+    def __str__(self):
+        return self.name
+
+    def __repr__(self):
+        return f"Node({self.name})"
+
 
 class Rib(SqlAlchemyBase):
     """Класс для модели ребра графа"""
@@ -76,6 +82,9 @@ class Rib(SqlAlchemyBase):
 
     def __str__(self):
         return f"{self.points[0].name}-{self.points[1].name}"
+
+    def __repr__(self):
+        return f"Rib({str(self)})"
 
 
 class Chain(SqlAlchemyBase):

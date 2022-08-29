@@ -1,10 +1,15 @@
 from models.elements import Graph, Vertex, Rib
 from sqlalchemy.orm import Session
+from typing import Union
 
 
 def str_is_float(s: str) -> bool:
     """Функция, проверяющая, является ли строка вещественным числом"""
-    return all(x.isdigit() or x == '.' for x in s) and s
+    try:
+        float(s)
+        return True
+    except ValueError:
+        return False
 
 
 def get_graph_names(session: Session) -> list:

@@ -13,9 +13,10 @@ from functions import get_graph_names, create_ribs, get_graph_by_name
 from PyQt5.Qt import QStandardItemModel
 from PyQt5 import uic
 from PyQt5.QtGui import QCloseEvent
-from PyQt5.QtWidgets import QMainWindow, QApplication
+from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox
 from PyQt5.QtGui import QPixmap
 from models import db_session
+from settings import NOT_OPEN
 import io
 from PIL import Image
 
@@ -61,6 +62,9 @@ class Mentor(QMainWindow):
 
     def openWindow(self) -> None:
         """Обработчик открытия новых окон"""
+        if self.graph_name is None:
+            QMessageBox.warning(self, "Open graph", NOT_OPEN)
+            return
         if self.sender() == self.actionEdit_list:
             self.window = EdgeList(self.graph_name, self)
             self.window.show()

@@ -2,8 +2,8 @@ from models import db_session
 from models.elements import *
 
 
-d = {1: '', 2: '', 3: ''}
-[d.update({i: i}) for i in range(3)]
+d = {(1, 2): 'aaaa', 2: '', 3: ''}
+d.pop((1, 2), None)
 print(d)
 # db_session.global_init('graphs.db')
 # session = db_session.create_session()
