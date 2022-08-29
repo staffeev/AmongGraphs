@@ -57,12 +57,21 @@ class GraphMatrix(QWidget):
             session.close()
             return
         new_name = form.inputData.text()
-        self.matrix.horizontalHeaderItem(index).setText(new_name)
-        self.matrix.verticalHeaderItem(index).setText(new_name)
-        graph.nodes[index].rename(form.inputData.text())
+        self.setLabelText(index, new_name)
+        graph.nodes[index].rename(new_name)
         session.commit()
         session.close()
 
+    def setLabelText(self, index: int, text: str) -> None:
+        """Метод, устаналивающий текст в заголовок таблицы"""
+        self.matrix.horizontalHeaderItem(index).setText(text)
+        self.matrix.verticalHeaderItem(index).setText(text)
+
+    def getLabels(self) -> list[str]:
+        """Метод, возвращающий заголовки таблицы"""
+        return [self.matrix.horizontalHeaderItem(x).text()
+                for x in range(self.get_cols())]
+        
     def changeItem(self, item) -> None:
         """Метод для сохранения изменений в таблице"""
         data = '' if not item.text() else float(item.text())
@@ -102,15 +111,12 @@ class GraphMatrix(QWidget):
         nodes = get_graph_nodes(session, self.graph_name)
         self.matrix.setRowCount(len(nodes))
         self.matrix.setColumnCount(len(nodes))
-        self.nameHeaders()
         for i, node1 in enumerate(nodes):
             for j, node2 in enumerate(nodes):
                 self.matrix.setItem(
                     i, j, QItem(str(ribs.get((str(node1), str(node2)), '')))
                 )
-        self.matrix.resizeRowsToContents()
-        self.matrix.resizeColumnsToContents()
-        self.stretchTable()
+        self.updateTableForm()
         session.close()
 
     def getSelectedRowsOrCols(self) -> set[int]:
@@ -129,7 +135,27 @@ class GraphMatrix(QWidget):
 
     def addNode(self) -> None:
         """Метод для добавления вершины в граф"""
+        session = db_session.create_session()
+        graph = get_graph_by_name(session, self.graph_name)
+        form = AddNewData(get_graph_nodes(session, self.graph_name),
+                          ENTER_NODE)
+        if not form.exec():
+            session.close()
+            return
+        v = Vertex(name=form.inputData.text())
+        graph.add_nodes(v)
+        session.add(v)
+        session.commit()
+        session.close()
+        self.expandTable()
+        self.updateTableForm()
         # TODO: addNode
+
+    def expandTable(self) -> None:
+        """Метод, расширяющий матрицу на одну строку и один столбец"""
+        cols = self.get_cols()
+        self.matrix.insertRow(cols)
+        self.matrix.insertColumn(cols)
 
     def deleteNode(self) -> None:
         """Метод для удаления вершины из графа"""
@@ -159,3 +185,10 @@ class GraphMatrix(QWidget):
     def get_cols(self) -> int:
         """Метод, возвращающий количество столбцов в таблице"""
         return self.matrix.columnCount()
+
+    def updateTableForm(self) -> None:
+        """Метод, обновляющий заголовки и размеры таблицы"""
+        self.nameHeaders()
+        self.matrix.resizeRowsToContents()
+        self.matrix.resizeColumnsToContents()
+        self.stretchTable()
