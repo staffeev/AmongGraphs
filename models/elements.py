@@ -29,11 +29,11 @@ class Vertex(SqlAlchemyBase):
     __tablename__ = 'vertexes'
     serialize_rules = ('-ribs_', '-chains_', '-graph')
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String)
+    name = Column(String, index=True)
     is_cutpoint = Column(Boolean, default=False)
     graph_id = Column(Integer, ForeignKey('graphs.id'))
     ribs = relation("Rib", secondary="vertex_to_rib",
-                    back_populates="points", cascade="all, delete")
+                    back_populates="nodes", cascade="all, delete")
 
     def rename(self, name: str) -> None:
         """Метод для переименования вершины"""
@@ -49,19 +49,19 @@ class Vertex(SqlAlchemyBase):
 class Rib(SqlAlchemyBase):
     """Класс для модели ребра графа"""
     __tablename__ = "ribs"
-    serialize_rules = ('-points', '-graph')
+    serialize_rules = ('-nodes', '-graph')
     id = Column(Integer, primary_key=True, autoincrement=True)
     weight = Column(Float, default=1)
     is_directed = Column(Boolean, default=False)
     is_bridge = Column(Boolean, default=False)
     graph_id = Column(Integer, ForeignKey('graphs.id'))
-    points = relation("Vertex", secondary="vertex_to_rib",
+    nodes = relation("Vertex", secondary="vertex_to_rib",
                       back_populates="ribs")
 
-    def add_vertexes(self, start: Vertex, end: Vertex) -> None:
+    def add_nodes(self, start: Vertex, end: Vertex) -> None:
         """Метод добавления начальной и конечной вершины ребра"""
-        self.points.append(start)
-        self.points.append(end)
+        self.nodes.append(start)
+        self.nodes.append(end)
 
     def change_weight(self, value: float) -> None:
         """Метод для изменения веса ребра"""
@@ -79,10 +79,14 @@ class Rib(SqlAlchemyBase):
         elif isinstance(arg, bool):
             self.change_dir(arg)
         elif isinstance(arg, str):
-            self.points[idx].rename(arg)
+            self.nodes[idx].rename(arg)
+
+    def replace_node(self, vertex: Vertex) -> None:
+        """"""
+        pass
 
     def __str__(self):
-        return f"{self.points[0].name}-{self.points[1].name}"
+        return f"{self.nodes[0].name}-{self.nodes[1].name}"
 
     def __repr__(self):
         return f"Rib({str(self)})"
@@ -108,10 +112,10 @@ class Chain(SqlAlchemyBase):
 class Graph(SqlAlchemyBase):
     """Классс для модели графа"""
     __tablename__ = "graphs"
-    serialize_rules = ('-ribs', '-points', '-chains')
+    serialize_rules = ('-ribs', '-nodes', '-chains')
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, nullable=False, unique=True, index=True)
-    num_of_vertex = Column(Integer)
+    num_of_vertexes = Column(Integer)
     num_of_ribs = Column(Integer)
     num_of_cutpoints = Column(Integer)
     num_of_bridges = Column(Integer)
@@ -120,20 +124,20 @@ class Graph(SqlAlchemyBase):
     min_cost_way = Column(Integer, default=inf)
     is_directed = Column(Boolean, default=False)
     is_connected = Column(Boolean, default=False)
-    points = relation("Vertex", backref="graph", cascade="all, delete-orphan")
+    nodes = relation("Vertex", backref="graph", cascade="all, delete-orphan")
     ribs = relation("Rib", backref="graph", cascade="all, delete-orphan")
     chains = relation("Chain", backref="graph", cascade="all, delete-orphan")
 
-    def add_vertexes(self, *vertexes: Vertex) -> None:
+    def add_nodes(self, *vertexes: Vertex) -> None:
         """Метод добавления вершин в граф"""
-        [self.points.append(vert) for vert in vertexes if vert not in self.points]
+        [self.nodes.append(vert) for vert in vertexes if vert not in self.nodes]
 
     def add_ribs(self, *ribs: Rib) -> None:
         """Метод добавления ребер в граф"""
         [self.ribs.append(rib) for rib in ribs if rib not in self.ribs]
-        self.add_vertexes(*[
-            vert for vert in {j for i in ribs for j in i.points}
-            if vert not in self.points
+        self.add_nodes(*[
+            vert for vert in {j for i in ribs for j in i.nodes}
+            if vert not in self.nodes
         ])
 
     def add_chains(self, *chains: Chain) -> None:

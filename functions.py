@@ -21,21 +21,25 @@ def get_graph_names(session: Session) -> list:
 def get_new_rib() -> [Vertex, Vertex, Rib]:
     """Функция, возвращающая элементы ребра графа"""
     v1, v2, r = Vertex(), Vertex(), Rib()
-    r.add_vertexes(v1, v2)
+    r.add_nodes(v1, v2)
     return v1, v2, r
 
 
 def get_graph_by_name(session: Session, name: str) -> Graph:
     """Функция для получения графа по имени"""
-    graph = session.query(Graph).filter(Graph.name == name).first()
-    return graph
+    return session.query(Graph).filter(Graph.name == name).first()
+
+
+def get_node_by_name(session: Session, name: str) -> Vertex:
+    """Функция для получения вершины по имени"""
+    return session.query(Vertex).filter(Vertex.name == name).first()
 
 
 def create_ribs(graph: Graph) -> dict:
     """Функция, создающая словарь (список) ребер графа"""
     ribs = {}
     for rib in graph.ribs:
-        ribs[rib.points[0].name, rib.points[1].name] = rib.weight
+        ribs[rib.nodes[0].name, rib.nodes[1].name] = rib.weight
         if not rib.is_directed:
-            ribs[rib.points[1].name, rib.points[0].name] = rib.weight
+            ribs[rib.nodes[1].name, rib.nodes[0].name] = rib.weight
     return ribs

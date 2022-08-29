@@ -113,11 +113,11 @@ class Mentor(QMainWindow):
         self.treeModel.setHorizontalHeaderItem(
             0, TreeItem(self.graph_name, bold=True)
         )
-        vertexes = TreeItem("Vertexes")
-        vertexes.appendRows([TreeItem(v.name, 8) for v in graph.points])
+        nodes = TreeItem("Vertexes")
+        nodes.appendRows([TreeItem(v.name, 8) for v in graph.nodes])
         ribs = TreeItem("Ribs")
         ribs.appendRows([TreeItem(str(r), 8) for r in graph.ribs])
-        self.rootNode.appendRows([vertexes, ribs])
+        self.rootNode.appendRows([nodes, ribs])
         session.close()
 
     def clearTree(self) -> None:
@@ -134,7 +134,7 @@ class Mentor(QMainWindow):
         plt.clf()
         fig_graph = nx.DiGraph()  # Создаем ориентированный граф
         fig_graph.add_edges_from(ribs)  # Добавляем в граф ребра
-        nodes = [i.name for i in graph.points]
+        nodes = [i.name for i in graph.nodes]
         pos = nx.spring_layout(fig_graph)  # Создаем слой, на котором
         # будут располагаться ребра и их веса
         plt.figure(2, figsize=(

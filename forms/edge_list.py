@@ -93,8 +93,8 @@ class EdgeList(QWidget):
 
     def ribPresentation(self, row: int, rib: Rib) -> None:
         """"Метод для занесения ребра в таблицу"""
-        self.table.setItem(row, 0, QItem(rib.points[0].name))
-        self.table.setItem(row, 1, QItem(rib.points[1].name))
+        self.table.setItem(row, 0, QItem(rib.nodes[0].name))
+        self.table.setItem(row, 1, QItem(rib.nodes[1].name))
         self.table.setItem(row, 2, QItem(str(rib.weight)))
         item = self.get_table_checkbox(row, rib.is_directed)
         self.table.setCellWidget(row, 3, item)
