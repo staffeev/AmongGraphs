@@ -110,12 +110,13 @@ class EdgeList(QWidget):
         )
         item = self.get_table_checkbox(last_row + 1, False)
         self.table.setCellWidget(last_row + 1, last_col, item)
-        v1, v2, rib = get_new_rib()
+        # v1, v2, rib = get_new_rib()
+        rib = Rib()
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
         [self.modified.update({(last_row + 1, i): ''}) for i in range(3)]
         graph.add_ribs(rib)
-        session.add_all([v1, v2, rib])
+        session.add_all([rib])
         session.commit()
         session.close()
 
@@ -140,13 +141,13 @@ class EdgeList(QWidget):
 
     def save(self) -> None:
         """Метод сохранения изменений в БД"""
-        print(self.modified)
         if not self.checkComplete():
             return
-        print("CHECKED")
         session = db_session.create_session()
         ribs = get_graph_by_name(session, self.graph_name).ribs
         [ribs[i].change_attrs(j, self.modified[i, j]) for i, j in self.modified]
+        graph = get_graph_by_name(session, self.graph_name)
+        # print(graph.ribs)
         session.commit()
         session.close()
         self.modified = {}

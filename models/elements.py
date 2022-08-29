@@ -73,17 +73,27 @@ class Rib(SqlAlchemyBase):
 
     def change_attrs(self, idx: int, arg: Union[str, float, bool]) -> None:
         """Метод для изменения атрибутов объекта"""
-        print(idx)
         if isinstance(arg, float):
             self.change_weight(arg)
         elif isinstance(arg, bool):
             self.change_dir(arg)
         elif isinstance(arg, str):
-            self.nodes[idx].rename(arg)
+            self.replace_node(idx, arg)
+            # self.nodes[idx].rename(arg)
 
-    def replace_node(self, vertex: Vertex) -> None:
-        """"""
-        pass
+    def replace_node(self, idx, node_name: str) -> None:
+        """Метод для замены вершин графа"""
+        try:
+            node = [i for i in self.graph.nodes if i.name == node_name][0]
+        except IndexError:
+            node = Vertex()
+            node.rename(node_name)
+        try:
+            self.nodes.pop(idx)
+            self.nodes.insert(idx, node)
+        except IndexError:
+            self.nodes.append(node)
+        self.graph.add_nodes(node)
 
     def __str__(self):
         return f"{self.nodes[0].name}-{self.nodes[1].name}"

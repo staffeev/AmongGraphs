@@ -1,12 +1,13 @@
 from models import db_session
 from models.elements import *
+from sqlalchemy.orm.collections import InstrumentedList
+
+help(InstrumentedList)
 
 
-d = {(1, 2): 'aaaa', 2: '', 3: ''}
-d.pop((1, 2), None)
-print(d)
 # db_session.global_init('graphs.db')
 # session = db_session.create_session()
+# print(session.query(Vertex).filter(Vertex.name == "DFFDFSSFSFFHSF").first())
 # v = Vertex(name="a")
 # v2 = Vertex(name="b")
 # v3 = Vertex(name="c")
