@@ -18,6 +18,12 @@ def get_graph_names(session: Session) -> list:
     return [graph.name for graph in session.query(Graph).all()]
 
 
+def get_graph_nodes(session: Session, graph_name: str) -> list[str]:
+    """Функция, возвращающая все вершины графа"""
+    graph = session.query(Graph).filter(Graph.name == graph_name).first()
+    return list(map(str, graph.nodes))
+
+
 def get_new_rib() -> [Vertex, Vertex, Rib]:
     """Функция, возвращающая элементы ребра графа"""
     v1, v2, r = Vertex(), Vertex(), Rib()

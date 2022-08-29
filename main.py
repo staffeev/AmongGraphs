@@ -8,6 +8,7 @@ from forms.name_the_graph import CreateGraphForm
 from forms.choose_graph import ChooseGraphForm
 from forms.tree_element import TreeItem
 from forms.edge_list import EdgeList
+from forms.matrix import GraphMatrix
 from models.elements import Graph
 from functions import get_graph_names, create_ribs, get_graph_by_name
 from PyQt5.Qt import QStandardItemModel
@@ -63,7 +64,9 @@ class Mentor(QMainWindow):
             return
         if self.sender() == self.actionEdit_list:
             self.window = EdgeList(self.graph_name, self)
-            self.window.show()
+        elif self.sender() == self.actionEdit_matrix:
+            self.window = GraphMatrix(self.graph_name, self)
+        self.window.show()
 
     def createGraph(self) -> None:
         """Метод для создания графа"""

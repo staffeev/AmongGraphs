@@ -16,7 +16,6 @@ class EdgeList(QWidget):
         self.parent = parent
         self.graph_name = graph_name
         self.modified = {}
-        self.can_save = False
         self.initUI()
         self.loadTable()
 
@@ -33,14 +32,14 @@ class EdgeList(QWidget):
         self.table.selectionModel().selectionChanged.connect(
             self.checkUnselected)
 
-    def checkUnselected(self, selected, unselected):
+    def checkUnselected(self, selected, unselected) -> bool:
         """Обработчик валидности невыделенных ячеек"""
         if len(unselected.indexes()) != 1:
             return True
         last_cell = unselected.indexes()[0]
         return self.validCell(last_cell.row(), last_cell.column())
 
-    def validCell(self, row, col):
+    def validCell(self, row: int, col: int) -> bool:
         """Проверка валидности значения ячейки таблицы"""
         if col != self.get_last_col() and not self.validEmpty(row, col):
             return False
@@ -48,7 +47,7 @@ class EdgeList(QWidget):
             return self.validNumber(row, col)
         return True
 
-    def validEmpty(self, row, col):
+    def validEmpty(self, row: int, col: int) -> bool:
         """Проверка наличия значения в ячейке"""
         try:
             if row > self.get_last_row():
@@ -60,7 +59,7 @@ class EdgeList(QWidget):
             QMessageBox.warning(self, "Error", EMPTY)
             return False
 
-    def validNumber(self, row, col):
+    def validNumber(self, row: int, col: int):
         """Проверка числового значения в ячейке"""
         try:
             return bool(float(self.table.item(row, col).text()))
@@ -110,13 +109,12 @@ class EdgeList(QWidget):
         )
         item = self.get_table_checkbox(last_row + 1, False)
         self.table.setCellWidget(last_row + 1, last_col, item)
-        # v1, v2, rib = get_new_rib()
         rib = Rib()
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
         [self.modified.update({(last_row + 1, i): ''}) for i in range(3)]
         graph.add_ribs(rib)
-        session.add_all([rib])
+        session.add(rib)
         session.commit()
         session.close()
 
