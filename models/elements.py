@@ -73,6 +73,7 @@ class Rib(SqlAlchemyBase):
 
     def change_attrs(self, idx: int, arg: Union[str, float, bool]) -> None:
         """Метод для изменения атрибутов объекта"""
+        print(idx)
         if isinstance(arg, float):
             self.change_weight(arg)
         elif isinstance(arg, bool):

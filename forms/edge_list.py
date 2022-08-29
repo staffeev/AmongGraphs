@@ -1,10 +1,9 @@
 from PyQt5.QtWidgets import QWidget, QTableWidgetItem as QItem, QHeaderView, \
-    QMessageBox, QCheckBox, QTableWidgetSelectionRange
+    QMessageBox, QTableWidgetSelectionRange
 from forms.table_checkbox import TableCheckbox
 from PyQt5 import uic
-from PyQt5.QtCore import Qt
 from models.elements import Rib
-from settings import CANNOT_ADD, ARE_YOU_SURE, NOT_NUMBER, EMPTY
+from settings import ARE_YOU_SURE, NOT_NUMBER, EMPTY
 from functions import get_new_rib, get_graph_by_name, str_is_float
 from models import db_session
 
@@ -34,12 +33,11 @@ class EdgeList(QWidget):
         self.table.selectionModel().selectionChanged.connect(
             self.checkUnselected)
 
-    def checkUnselected(self, _, unselected):
+    def checkUnselected(self, selected, unselected):
         """Обработчик валидности невыделенных ячеек"""
         if len(unselected.indexes()) != 1:
             return True
         last_cell = unselected.indexes()[0]
-        print(last_cell.row(), last_cell.column())
         return self.validCell(last_cell.row(), last_cell.column())
 
     def validCell(self, row, col):
@@ -142,8 +140,10 @@ class EdgeList(QWidget):
 
     def save(self) -> None:
         """Метод сохранения изменений в БД"""
+        print(self.modified)
         if not self.checkComplete():
             return
+        print("CHECKED")
         session = db_session.create_session()
         ribs = get_graph_by_name(session, self.graph_name).ribs
         [ribs[i].change_attrs(j, self.modified[i, j]) for i, j in self.modified]
@@ -155,7 +155,7 @@ class EdgeList(QWidget):
 
     def checkComplete(self) -> bool:
         """Метод проверки заполненности полей последней строки таблицы"""
-        if self.get_last_row() <= 0:
+        if self.get_last_row() < 0:
             return True
         return all(self.validCell(i, j) for i, j in self.modified)
 

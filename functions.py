@@ -1,5 +1,6 @@
 from models.elements import Graph, Vertex, Rib
 from sqlalchemy.orm import Session
+from models import db_session
 from typing import Union
 
 

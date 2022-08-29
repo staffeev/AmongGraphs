@@ -32,19 +32,15 @@ class Mentor(QMainWindow):
         super().__init__()
         uic.loadUi('UI/main.ui', self)
         self.graph_name = None
-        # self.graph = None
-        self.splitter.setSizes([200, 600])
-        self.widget.setLayout(self.hl)
-        self.setCentralWidget(self.widget)
-        self.treeModel = QStandardItemModel()
-        self.rootNode = self.treeModel.invisibleRootItem()
-        self.graph_list.setModel(self.treeModel)
         self.window = None
         self.image = None
         self.initUI()
 
     def initUI(self) -> None:
         """Настройка UI и привязка событий к обработчикам"""
+        self.treeModel = QStandardItemModel()
+        self.rootNode = self.treeModel.invisibleRootItem()
+        self.graph_list.setModel(self.treeModel)
         # Настройка относительного позиционирования элементов главного окна
         self.splitter.setSizes([200, 600])
         self.widget.setLayout(self.hl)
@@ -101,6 +97,7 @@ class Mentor(QMainWindow):
             ).first()
             session.delete(graph)
             session.commit()
+            self.clearTree()
         session.close()
 
     def saveChanges(self) -> None:
@@ -110,8 +107,7 @@ class Mentor(QMainWindow):
 
     def showTreeOfElements(self) -> None:
         """Метод для построения дерева элементов графа"""
-        self.treeModel.clear()
-        self.rootNode = self.treeModel.invisibleRootItem()
+        self.clearTree()
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
         self.treeModel.setHorizontalHeaderItem(
@@ -123,6 +119,11 @@ class Mentor(QMainWindow):
         ribs.appendRows([TreeItem(str(r), 8) for r in graph.ribs])
         self.rootNode.appendRows([vertexes, ribs])
         session.close()
+
+    def clearTree(self) -> None:
+        """Метод очистки дерева элементов графа"""
+        self.treeModel.clear()
+        self.rootNode = self.treeModel.invisibleRootItem()
 
     def create_graph(self):
         """Функция, создающая граф на основе списка ребер"""
