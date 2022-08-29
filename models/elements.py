@@ -36,7 +36,7 @@ class Vertex(SqlAlchemyBase):
 
     def rename(self, name: str) -> None:
         """Метод для переименования вершины"""
-        self.name = name
+        self.name = name.strip()
 
 
 class Rib(SqlAlchemyBase):

@@ -126,23 +126,21 @@ class Mentor(QMainWindow):
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
         ribs = create_ribs(graph)
-        if ribs:
-            plt.clf()
-            fig_graph = nx.DiGraph()  # Создаем ориентированный граф
-            fig_graph.add_edges_from(ribs)  # Добавляем в граф ребра
-            nodes = [i.name for i in graph.points]
-            # nodes = list(self.graph.nodes)  # Определим вершны графа
-            pos = nx.spring_layout(fig_graph)  # Создаем слой, на котором
-            # будут располагаться ребра и их веса
-            fig = plt.figure(2, figsize=(
-                self.canvas.size().width() // 100,
-                self.canvas.size().height() // 100))
-            # Рисование весов ребер
-            nx.draw_networkx_edge_labels(fig_graph, pos, edge_labels=ribs,
-                                         font_size=7)
-            # Рисование ребер и вершин
-            nx.draw(fig_graph, pos, nodelist=nodes, node_size=175,
-                    with_labels=True)
+        plt.clf()
+        fig_graph = nx.DiGraph()  # Создаем ориентированный граф
+        fig_graph.add_edges_from(ribs)  # Добавляем в граф ребра
+        nodes = [i.name for i in graph.points]
+        pos = nx.spring_layout(fig_graph)  # Создаем слой, на котором
+        # будут располагаться ребра и их веса
+        plt.figure(2, figsize=(
+            self.canvas.size().width() // 100,
+            self.canvas.size().height() // 100))
+        # Рисование весов ребер
+        nx.draw_networkx_edge_labels(fig_graph, pos, edge_labels=ribs,
+                                     font_size=7)
+        # Рисование ребер и вершин
+        nx.draw(fig_graph, pos, nodelist=nodes, node_size=175,
+                with_labels=True)
 
     def plt_figure_to_pil_image(self, fig):
         """Функция принимает фигуру в pyplot и конвертирует
