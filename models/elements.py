@@ -3,6 +3,7 @@ from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Float
 from sqlalchemy.orm import relation
 from .db_session import SqlAlchemyBase
 from math import inf
+from typing import Union
 
 
 association_table = sqlalchemy.Table(
@@ -63,6 +64,15 @@ class Rib(SqlAlchemyBase):
     def change_dir(self, value: bool) -> None:
         """Метод для создания (удаления) направления ребра"""
         self.is_directed = int(value)
+
+    def change_attrs(self, idx: int, arg: Union[str, float, bool]) -> None:
+        """Метод для изменения атрибутов объекта"""
+        if isinstance(arg, float):
+            self.change_weight(arg)
+        elif isinstance(arg, bool):
+            self.change_dir(arg)
+        elif isinstance(arg, str):
+            self.points[idx].rename(arg)
 
     def __str__(self):
         return f"{self.points[0].name}-{self.points[1].name}"

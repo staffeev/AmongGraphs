@@ -2,6 +2,11 @@ from models.elements import Graph, Vertex, Rib
 from sqlalchemy.orm import Session
 
 
+def str_is_float(s: str) -> bool:
+    """Функция, проверяющая, является ли строка вещественным числом"""
+    return all(x.isdigit() or x == '.' for x in s) and s
+
+
 def get_graph_names(session: Session) -> list:
     """Функция для получения имен всех графов в БД"""
     return [graph.name for graph in session.query(Graph).all()]

@@ -4,7 +4,7 @@ from forms.table_checkbox import TableCheckbox
 from PyQt5 import uic
 from PyQt5.QtCore import Qt
 from settings import CANNOT_ADD, ARE_YOU_SURE, NOT_NUMBER, EMPTY
-from functions import get_new_rib, get_graph_by_name
+from functions import get_new_rib, get_graph_by_name, str_is_float
 from models import db_session
 
 
@@ -42,11 +42,13 @@ class EdgeList(QWidget):
     def validEmpty(self, row, col):
         """Проверка наличия значения в ячейке"""
         try:
+            if row > self.get_last_row():
+                return True
             if not self.table.item(row, col).text():
                 raise AttributeError
             return True
         except AttributeError:
-            QMessageBox.critical(self, "Error", EMPTY)
+            QMessageBox.warning(self, "Error", EMPTY)
             return False
 
     def validNumber(self, row, col):
@@ -59,7 +61,10 @@ class EdgeList(QWidget):
 
     def changeItem(self, item) -> None:
         """Метод для сохранения изменений в таблице"""
-        self.modified[item.row(), item.column()] = item.text()
+        if str_is_float(item.text()):
+            self.modified[item.row(), item.column()] = float(item.text())
+        else:
+            self.modified[item.row(), item.column()] = item.text()
 
     def changeCheckbox(self) -> None:
         """Метод для сохранения изменения состояния флажков"""
@@ -93,11 +98,12 @@ class EdgeList(QWidget):
         last_row, last_col = self.get_last_indexes()
         self.table.insertRow(last_row + 1)
         self.table.setRangeSelected(QTableWidgetSelectionRange(
-            last_row, 0, last_row, last_col), True
+            last_row + 1, 0, last_row + 1, last_col), True
         )
-        item = TableCheckbox(last_row)
+        item = TableCheckbox(last_row + 1)
+        item.setState(False)
         item.checkbox.clicked.connect(self.changeCheckbox)
-        self.table.setCellWidget(last_row, last_col, item)
+        self.table.setCellWidget(last_row + 1, last_col, item)
         v1, v2, rib = get_new_rib()
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
@@ -126,17 +132,9 @@ class EdgeList(QWidget):
         """Метод сохранения изменений в БД"""
         if not self.checkComplete():
             return
-        print(self.modified)
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
-        for i, j in self.modified:
-            if j < 2:
-                graph.ribs[i].points[j].rename(self.modified[i, j])
-            elif j == 2:
-                graph.ribs[i].change_weight(float(self.modified[i, j]))
-            else:
-                print('TETSTSTSTTS')
-                graph.ribs[i].change_dir(self.modified[i, j])
+        [graph.ribs[i].change_attrs(j, self.modified[i, j]) for i, j in self.modified]
         session.commit()
         self.modified = {}
         self.parent.showTreeOfElements()
