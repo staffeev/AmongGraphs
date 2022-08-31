@@ -2,13 +2,11 @@ from PyQt5.QtWidgets import QWidget, QHeaderView, QMessageBox, \
     QTableWidgetItem as QItem
 from PyQt5 import uic
 from PyQt5.QtCore import Qt
-from functions import str_is_float, get_graph_by_name, create_ribs, \
-    get_graph_nodes, get_rib_by_nodes
-from settings import ARE_YOU_SURE, ENTER_NODE, GRAY, NOT_NUMBER, CHDIR, NWGHT, NTET
+from functions import str_is_float, get_graph_by_name, create_ribs
+from settings import ARE_YOU_SURE, ENTER_NODE, GRAY, NOT_NUMBER, NTET
 from forms.add_new_data_form import AddNewData
 from models import db_session
-from models.elements import Graph, Rib, Vertex
-from sqlalchemy.orm import Session
+from models.elements import Rib, Vertex
 from typing import Union
 
 
@@ -46,7 +44,7 @@ class GraphMatrix(QWidget):
     def nameHeaders(self) -> None:
         """Метод, переименовывающий заголовки таблицы"""
         session = db_session.create_session()
-        nodes = get_graph_nodes(session, self.graph_name)
+        nodes = get_graph_by_name(session, self.graph_name).get_nodes()
         self.matrix.setHorizontalHeaderLabels(nodes)
         self.matrix.setVerticalHeaderLabels(nodes)
         session.close()
@@ -55,7 +53,7 @@ class GraphMatrix(QWidget):
         """Метод для переименования вершины графа"""
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
-        form = AddNewData(get_graph_nodes(session, self.graph_name), ENTER_NODE)
+        form = AddNewData(graph.get_nodes(), ENTER_NODE)
         if not form.exec():
             session.close()
             return
@@ -80,7 +78,7 @@ class GraphMatrix(QWidget):
         if item.row() != item.column():
             self.modified[item.row(), item.column()] = item.text()
 
-    def checkUnselected(self, selected, unselected) -> bool:
+    def checkUnselected(self, _, unselected) -> bool:
         """Обработчик валидности невыделенных ячеек"""
         if len(unselected.indexes()) != 1:
             return True
@@ -114,7 +112,7 @@ class GraphMatrix(QWidget):
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
         ribs = create_ribs(graph)
-        nodes = get_graph_nodes(session, self.graph_name)
+        nodes = graph.get_nodes()
         self.matrix.setRowCount(len(nodes))
         self.matrix.setColumnCount(len(nodes))
         for i, node1 in enumerate(nodes):
@@ -144,8 +142,7 @@ class GraphMatrix(QWidget):
         """Метод для добавления вершины в граф"""
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
-        form = AddNewData(get_graph_nodes(session, self.graph_name),
-                          ENTER_NODE)
+        form = AddNewData(graph.get_nodes(), ENTER_NODE)
         if not form.exec():
             session.close()
             return

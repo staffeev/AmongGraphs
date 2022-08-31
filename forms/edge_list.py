@@ -4,7 +4,7 @@ from forms.table_checkbox import TableCheckbox
 from PyQt5 import uic
 from models.elements import Rib
 from settings import ARE_YOU_SURE, NOT_NUMBER, EMPTY
-from functions import get_new_rib, get_graph_by_name, str_is_float
+from functions import get_graph_by_name, str_is_float
 from models import db_session
 
 
@@ -32,7 +32,7 @@ class EdgeList(QWidget):
         self.table.selectionModel().selectionChanged.connect(
             self.checkUnselected)
 
-    def checkUnselected(self, selected, unselected) -> bool:
+    def checkUnselected(self, _, unselected) -> bool:
         """Обработчик валидности невыделенных ячеек"""
         if len(unselected.indexes()) != 1:
             return True
@@ -102,16 +102,17 @@ class EdgeList(QWidget):
         if not self.checkComplete():
             return
         last_row, last_col = self.get_last_indexes()
-        self.table.insertRow(last_row + 1)
+        last_row += 1
+        self.table.insertRow(last_row)
         self.table.setRangeSelected(QTableWidgetSelectionRange(
-            last_row + 1, 0, last_row + 1, last_col), True
+            last_row, 0, last_row, last_col), True
         )
-        item = self.get_table_checkbox(last_row + 1, False)
-        self.table.setCellWidget(last_row + 1, last_col, item)
+        item = self.get_table_checkbox(last_row, False)
+        self.table.setCellWidget(last_row, last_col, item)
         rib = Rib()
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
-        [self.modified.update({(last_row + 1, i): ''}) for i in range(3)]
+        [self.modified.update({(last_row, i): ''}) for i in range(3)]
         graph.add_ribs(rib)
         session.add(rib)
         session.commit()
@@ -144,8 +145,6 @@ class EdgeList(QWidget):
         session = db_session.create_session()
         ribs = get_graph_by_name(session, self.graph_name).ribs
         [ribs[i].change_attrs(j, self.modified[i, j]) for i, j in self.modified]
-        graph = get_graph_by_name(session, self.graph_name)
-        # print(graph.ribs)
         session.commit()
         session.close()
         self.modified = {}
