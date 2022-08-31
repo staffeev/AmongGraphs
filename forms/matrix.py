@@ -188,12 +188,10 @@ class GraphMatrix(QWidget):
         if not self.checkComplete():
             return
         print(self.modified)
-        session = db_session.create_session()
         for i, j in self.modified:
-            self.identifyChanges(i, j, session)
+            self.identifyChanges(i, j)
             pass
         #TODO: save
-        session.close()
         pass
 
     def identifyChanges(self, row: int, col: int) -> None:
@@ -212,22 +210,30 @@ class GraphMatrix(QWidget):
         было ребро добавлено или нет (или ребро уже существует и его
         значение надо изменить)"""
         item1 = self.modified[row, col]
-        item2 = self.modified.get((row, col), None)
-        session = db_session.create_session()
+        item2 = self.get_item(col, row)
+        print(item1, item2)
         if item1 == item2:
-            self.changeRib(row, col) ## TODO
-
-
-        pass
+            self.changeRib(col, row, CHDIR) ## TODO
+            return
+        session = db_session.create_session()
+        graph = get_graph_by_name(session, self.graph_name)
+        nodes = graph.get_nodes_by_index(row, col)
+        rib = Rib(weight=float(self.modified[row, col]), is_directed=True)
+        rib.add_nodes(*nodes)
+        graph.add_ribs(rib)
+        session.add(rib)
+        session.commit()
+        session.close()
 
     def changeRib(self, row: int, col: int, flag=None) -> None:
         """Метод, изменяющий уже существующее ребро"""
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
-
+        rib = graph.get_rib_by_nodes(row, col)
         if flag == CHDIR:
-            pass
-
+            rib.change_dir()
+        session.commit()
+        session.close()
         # TODO: change rib
         pass
 
@@ -272,7 +278,9 @@ class GraphMatrix(QWidget):
     def editMainDiagonal(self) -> None:
         """Метод, изменяющий главную диагональ матрицы (добавление цвета и
         невозможность редактирования)"""
+        print(self.get_cols())
         for i in range(self.get_cols()):
+            self.matrix.setItem(i, i, QItem(''))
             item = self.matrix.item(i, i)
             item.setFlags(Qt.ItemFlag(False))
             item.setBackground(GRAY)
@@ -280,6 +288,6 @@ class GraphMatrix(QWidget):
     def get_item(self, row: int, col: int) -> Union[str, None]:
         """Метод, возвращающий значение ячейки таблицы"""
         item = self.matrix.item(row, col)
-        if item is not None or not item.text():
-            return item.text()
-        return item
+        if item is None:
+            return None
+        return item.text()

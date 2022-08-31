@@ -67,9 +67,12 @@ class Rib(SqlAlchemyBase):
         """Метод для изменения веса ребра"""
         self.weight = value
 
-    def change_dir(self, value: bool) -> None:
+    def change_dir(self, value=None) -> None:
         """Метод для создания (удаления) направления ребра"""
-        self.is_directed = int(value)
+        if value is None:
+            self.is_directed = not self.is_directed
+        else:
+            self.is_directed = int(value)
 
     def change_attrs(self, idx: int, arg: Union[str, float, bool]) -> None:
         """Метод для изменения атрибутов объекта"""
@@ -176,7 +179,7 @@ class Graph(SqlAlchemyBase):
             v1, v2 = self.get_nodes_by_name(node1, node2)
         else:
             v1, v2 = self.get_nodes_by_index(node1, node2)
-        rib = [i for i in self.ribs if i.points[0] == v1 and i.points[1] == v2]
+        rib = [i for i in self.ribs if i.nodes[0] == v1 and i.nodes[1] == v2]
         if not rib:
             return
         return rib[0]
