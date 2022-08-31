@@ -1,11 +1,11 @@
 from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QVBoxLayout, QLabel, \
     QLineEdit, QMessageBox
-from settings import ALREADY_EXISTS
+from settings import ALREADY_EXISTS, EMPTY
 
 
-class CreateGraphForm(QDialog):
-    """Класс диалогового окна для получения имени нового графа"""
-    def __init__(self, existing_names: list, parent=None) -> None:
+class AddNewData(QDialog):
+    """Класс диалогового окна для добавленния новой информации"""
+    def __init__(self, existing_names: list, text=None, parent=None) -> None:
         super().__init__(parent)
         self.names = existing_names
         self.setWindowTitle("Enter data")
@@ -15,7 +15,8 @@ class CreateGraphForm(QDialog):
         self.buttonBox.accepted.connect(self.accept)
         self.buttonBox.rejected.connect(self.reject)
         self.layout = QVBoxLayout()
-        self.layout.addWidget(QLabel("Enter the name of the graph:"))
+        self.label = QLabel(text)
+        self.layout.addWidget(self.label)
         self.inputData = QLineEdit()
         self.layout.addWidget(self.inputData)
         self.layout.addWidget(self.buttonBox)
@@ -23,7 +24,9 @@ class CreateGraphForm(QDialog):
 
     def accept(self) -> None:
         """Обработчик события нажатия на кнопку ОК"""
-        if self.inputData.text() in self.names:
+        if not self.inputData.text():
+            QMessageBox.warning(self, "Warning", EMPTY)
+        elif self.inputData.text() in self.names:
             QMessageBox.critical(self, "Error", ALREADY_EXISTS)
         else:
             self.done(1)

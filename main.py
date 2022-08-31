@@ -4,19 +4,20 @@ import networkx as nx
 from PIL.ImageQt import ImageQt
 from matplotlib import pyplot as plt
 
-from forms.name_the_graph import CreateGraphForm
+from forms.add_new_data_form import AddNewData
 from forms.choose_graph import ChooseGraphForm
 from forms.tree_element import TreeItem
 from forms.edge_list import EdgeList
+from forms.matrix import GraphMatrix
 from models.elements import Graph
 from functions import get_graph_names, create_ribs, get_graph_by_name
 from PyQt5.Qt import QStandardItemModel
 from PyQt5 import uic
 from PyQt5.QtGui import QCloseEvent
-from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QMainWindow, QApplication
-from PyQt5.QtGui import QPixmap, QKeyEvent
+from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox
+from PyQt5.QtGui import QPixmap
 from models import db_session
+from settings import NOT_OPEN, ENTER_GRAPH
 import io
 from PIL import Image
 
@@ -32,18 +33,15 @@ class Mentor(QMainWindow):
         super().__init__()
         uic.loadUi('UI/main.ui', self)
         self.graph_name = None
-        # self.graph = None
-        self.splitter.setSizes([200, 600])
-        self.widget.setLayout(self.hl)
-        self.setCentralWidget(self.widget)
-        self.treeModel = QStandardItemModel()
-        self.rootNode = self.treeModel.invisibleRootItem()
-        self.graph_list.setModel(self.treeModel)
         self.window = None
+        self.image = None
         self.initUI()
 
     def initUI(self) -> None:
         """Настройка UI и привязка событий к обработчикам"""
+        self.treeModel = QStandardItemModel()
+        self.rootNode = self.treeModel.invisibleRootItem()
+        self.graph_list.setModel(self.treeModel)
         # Настройка относительного позиционирования элементов главного окна
         self.splitter.setSizes([200, 600])
         self.widget.setLayout(self.hl)
@@ -61,14 +59,19 @@ class Mentor(QMainWindow):
 
     def openWindow(self) -> None:
         """Обработчик открытия новых окон"""
+        if self.graph_name is None:
+            QMessageBox.warning(self, "Open graph", NOT_OPEN)
+            return
         if self.sender() == self.actionEdit_list:
             self.window = EdgeList(self.graph_name, self)
-            self.window.show()
+        elif self.sender() == self.actionEdit_matrix:
+            self.window = GraphMatrix(self.graph_name, self)
+        self.window.show()
 
     def createGraph(self) -> None:
         """Метод для создания графа"""
         session = db_session.create_session()
-        form = CreateGraphForm(get_graph_names(session), self)
+        form = AddNewData(get_graph_names(session), ENTER_GRAPH, self)
         if form.exec():  # Создание графа
             graph = Graph(name=form.inputData.text())
             session.add(graph)
@@ -97,6 +100,9 @@ class Mentor(QMainWindow):
             ).first()
             session.delete(graph)
             session.commit()
+            self.clearTree()
+            if self.window is not None:
+                self.window.close()
         session.close()
 
     def saveChanges(self) -> None:
@@ -106,19 +112,23 @@ class Mentor(QMainWindow):
 
     def showTreeOfElements(self) -> None:
         """Метод для построения дерева элементов графа"""
-        self.treeModel.clear()
-        self.rootNode = self.treeModel.invisibleRootItem()
+        self.clearTree()
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
         self.treeModel.setHorizontalHeaderItem(
             0, TreeItem(self.graph_name, bold=True)
         )
-        vertexes = TreeItem("Vertexes")
-        vertexes.appendRows([TreeItem(v.name, 8) for v in graph.points])
+        nodes = TreeItem("Vertexes")
+        nodes.appendRows([TreeItem(v.name, 8) for v in graph.nodes])
         ribs = TreeItem("Ribs")
         ribs.appendRows([TreeItem(str(r), 8) for r in graph.ribs])
-        self.rootNode.appendRows([vertexes, ribs])
+        self.rootNode.appendRows([nodes, ribs])
         session.close()
+
+    def clearTree(self) -> None:
+        """Метод очистки дерева элементов графа"""
+        self.treeModel.clear()
+        self.rootNode = self.treeModel.invisibleRootItem()
 
     def create_graph(self):
         """Функция, создающая граф на основе списка ребер"""
@@ -129,7 +139,7 @@ class Mentor(QMainWindow):
         plt.clf()
         fig_graph = nx.DiGraph()  # Создаем ориентированный граф
         fig_graph.add_edges_from(ribs)  # Добавляем в граф ребра
-        nodes = [i.name for i in graph.points]
+        nodes = [i.name for i in graph.nodes]
         pos = nx.spring_layout(fig_graph)  # Создаем слой, на котором
         # будут располагаться ребра и их веса
         plt.figure(2, figsize=(

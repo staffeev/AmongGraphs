@@ -1,10 +1,10 @@
-from PyQt5.QtWidgets import QWidget, QTableWidgetItem, QHeaderView, \
-    QMessageBox, QCheckBox, QTableWidgetSelectionRange
+from PyQt5.QtWidgets import QWidget, QTableWidgetItem as QItem, QHeaderView, \
+    QMessageBox, QTableWidgetSelectionRange
 from forms.table_checkbox import TableCheckbox
 from PyQt5 import uic
-from PyQt5.QtCore import Qt
-from settings import CANNOT_ADD, ARE_YOU_SURE, NOT_NUMBER, EMPTY
-from functions import get_new_rib, get_graph_by_name, str_is_float
+from models.elements import Rib
+from settings import ARE_YOU_SURE, NOT_NUMBER, EMPTY
+from functions import get_graph_by_name, str_is_float
 from models import db_session
 
 
@@ -16,22 +16,30 @@ class EdgeList(QWidget):
         self.parent = parent
         self.graph_name = graph_name
         self.modified = {}
+        self.initUI()
+        self.loadTable()
+
+    def initUI(self) -> None:
+        """Метод для установки UI и привязки событий"""
         self.setLayout(self.vl)
         self.addEdge.clicked.connect(self.addRow)
         self.deleteEdge.clicked.connect(self.deleteRow)
         self.saveChanges.clicked.connect(self.save)
+        header = self.table.horizontalHeader()
+        for i in range(self.table.columnCount()):
+            header.setSectionResizeMode(i, QHeaderView.Stretch)
         self.table.itemChanged.connect(self.changeItem)
-        self.table.selectionModel().selectionChanged.connect(self.checkUnselected)
-        self.loadTable()
+        self.table.selectionModel().selectionChanged.connect(
+            self.checkUnselected)
 
-    def checkUnselected(self, selected, unselected):
+    def checkUnselected(self, _, unselected) -> bool:
         """Обработчик валидности невыделенных ячеек"""
-        for ix in unselected.indexes():
-            if not self.validCell(ix.row(), ix.column()):
-                return False
-        return True
+        if len(unselected.indexes()) != 1:
+            return True
+        last_cell = unselected.indexes()[0]
+        return self.validCell(last_cell.row(), last_cell.column())
 
-    def validCell(self, row, col):
+    def validCell(self, row: int, col: int) -> bool:
         """Проверка валидности значения ячейки таблицы"""
         if col != self.get_last_col() and not self.validEmpty(row, col):
             return False
@@ -39,7 +47,7 @@ class EdgeList(QWidget):
             return self.validNumber(row, col)
         return True
 
-    def validEmpty(self, row, col):
+    def validEmpty(self, row: int, col: int) -> bool:
         """Проверка наличия значения в ячейке"""
         try:
             if row > self.get_last_row():
@@ -51,17 +59,16 @@ class EdgeList(QWidget):
             QMessageBox.warning(self, "Error", EMPTY)
             return False
 
-    def validNumber(self, row, col):
+    def validNumber(self, row: int, col: int):
         """Проверка числового значения в ячейке"""
-        try:
-            return bool(float(self.table.item(row, col).text()))
-        except ValueError:
-            QMessageBox.critical(self, "Error", NOT_NUMBER)
-            return
+        if str_is_float(self.table.item(row, col).text()):
+            return True
+        QMessageBox.critical(self, "Error", NOT_NUMBER)
+        return False
 
     def changeItem(self, item) -> None:
         """Метод для сохранения изменений в таблице"""
-        if str_is_float(item.text()):
+        if str_is_float(item.text()) and item.column() == 2:
             self.modified[item.row(), item.column()] = float(item.text())
         else:
             self.modified[item.row(), item.column()] = item.text()
@@ -76,45 +83,46 @@ class EdgeList(QWidget):
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
         self.table.setRowCount(len(graph.ribs))
-        header = self.table.horizontalHeader()
-        for i in range(self.table.columnCount()):
-            header.setSectionResizeMode(i, QHeaderView.Stretch)
         for i, rib in enumerate(graph.ribs):
-            self.table.setItem(i, 0, QTableWidgetItem(rib.points[0].name))
-            self.table.setItem(i, 1, QTableWidgetItem(rib.points[1].name))
-            self.table.setItem(i, 2, QTableWidgetItem(str(rib.weight)))
-            item = TableCheckbox(i)
-            item.setState(rib.is_directed)
-            item.checkbox.clicked.connect(self.changeCheckbox)
-            self.table.setCellWidget(i, 3, item)
+            self.ribPresentation(i, rib)
         self.table.resizeRowsToContents()
         self.modified = {}
         session.close()
+
+    def ribPresentation(self, row: int, rib: Rib) -> None:
+        """"Метод для занесения ребра в таблицу"""
+        self.table.setItem(row, 0, QItem(rib.nodes[0].name))
+        self.table.setItem(row, 1, QItem(rib.nodes[1].name))
+        self.table.setItem(row, 2, QItem(str(rib.weight)))
+        item = self.get_table_checkbox(row, rib.is_directed)
+        self.table.setCellWidget(row, 3, item)
 
     def addRow(self) -> None:
         """Метод для добавления ребра в таблицу"""
         if not self.checkComplete():
             return
         last_row, last_col = self.get_last_indexes()
-        self.table.insertRow(last_row + 1)
+        last_row += 1
+        self.table.insertRow(last_row)
         self.table.setRangeSelected(QTableWidgetSelectionRange(
-            last_row + 1, 0, last_row + 1, last_col), True
+            last_row, 0, last_row, last_col), True
         )
-        item = TableCheckbox(last_row + 1)
-        item.setState(False)
-        item.checkbox.clicked.connect(self.changeCheckbox)
-        self.table.setCellWidget(last_row + 1, last_col, item)
-        v1, v2, rib = get_new_rib()
+        item = self.get_table_checkbox(last_row, False)
+        self.table.setCellWidget(last_row, last_col, item)
+        rib = Rib()
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
+        [self.modified.update({(last_row, i): ''}) for i in range(3)]
         graph.add_ribs(rib)
-        session.add_all([v1, v2, rib])
+        session.add(rib)
         session.commit()
         session.close()
 
     def deleteRow(self) -> None:
         """Метод для удаления ребра из таблицы"""
         idx = {i.row() for i in self.table.selectedIndexes()}
+        if not idx:
+            return
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
         ribs = [graph.ribs[i] for i in idx]
@@ -122,8 +130,10 @@ class EdgeList(QWidget):
             self, "Delete ribs", f"{ARE_YOU_SURE} ribs {', '.join(map(str, ribs))}"
         )
         if flag == QMessageBox.No:
+            session.close()
             return
         [session.delete(rib) for rib in ribs]
+        [self.modified.pop((i, j), None) for i in idx for j in range(self.table.columnCount())]
         session.commit()
         session.close()
         self.loadTable()
@@ -133,19 +143,19 @@ class EdgeList(QWidget):
         if not self.checkComplete():
             return
         session = db_session.create_session()
-        graph = get_graph_by_name(session, self.graph_name)
-        [graph.ribs[i].change_attrs(j, self.modified[i, j]) for i, j in self.modified]
+        ribs = get_graph_by_name(session, self.graph_name).ribs
+        [ribs[i].change_attrs(j, self.modified[i, j]) for i, j in self.modified]
         session.commit()
+        session.close()
         self.modified = {}
         self.parent.showTreeOfElements()
         self.parent.draw_graph()
 
     def checkComplete(self) -> bool:
-        """Метод проверки заполненности полей последней строки таблицы"""
-        idx = self.get_last_row()
-        if idx <= 0:
+        """Метод проверки корректности измененных данных"""
+        if self.get_last_row() < 0:
             return True
-        return all(self.validCell(idx, i) for i in range(3))
+        return all(self.validCell(i, j) for i, j in self.modified)
 
     def get_last_row(self):
         """Метод, возвращающий индекс последней строки таблицы"""
@@ -158,3 +168,11 @@ class EdgeList(QWidget):
     def get_last_indexes(self):
         """Метод, возвращающий индекс правого нижнего элемента таблицы"""
         return self.get_last_row(), self.get_last_col()
+
+    def get_table_checkbox(self, row: int, value: bool) -> TableCheckbox:
+        """Метод, возвращающий флажок для ячейки таблицы"""
+        item = TableCheckbox(row)
+        item.setState(value)
+        item.checkbox.clicked.connect(self.changeCheckbox)
+        return item
+
