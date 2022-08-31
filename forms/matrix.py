@@ -187,19 +187,41 @@ class GraphMatrix(QWidget):
         """Метод для сохранения изменений"""
         if not self.checkComplete():
             return
-        print(self.modified)
         for i, j in self.modified:
             if self.modified[i, j] == NTET:
                 continue
-            self.identifyChanges(i, j)
-            session = db_session.create_session()
-            graph = get_graph_by_name(session, self.graph_name)
-            print(graph.ribs)
-            print()
-            session.close()
-            pass
+            self.processRib(i, j)
         self.modified = {}
         self.parent.draw_graph()
+
+    def processRib(self, row: int, col: int) -> None:
+        """Метод, обрабаотывающий измененное ребро"""
+        session = db_session.create_session()
+        graph = get_graph_by_name(session, self.graph_name)
+        nodes = graph.get_nodes_by_index(row, col)
+        rib = graph.get_rib_by_nodes(row, col)
+        inv_rib = graph.get_rib_by_nodes(col, row)
+        item1, item2 = self.get_item(row, col), self.get_item(col, row)
+        idx1 = len(graph.ribs) if rib is None else graph.ribs.index(rib)
+        idx2 = len(graph.ribs) if inv_rib is None else graph.ribs.index(inv_rib)
+        if rib is not None:
+            session.delete(rib)
+        if inv_rib is not None:
+            session.delete(inv_rib)
+        if item1:
+            r1 = Rib(weight=float(item1), is_directed=bool(item2 != item1))
+            r1.add_nodes(*nodes)
+            graph.ribs.insert(idx1, r1)
+            session.add(r1)
+        if item1 != item2 and item2:
+            r2 = Rib(weight=float(item2), is_directed=True)
+            r2.add_nodes(nodes[1], nodes[0])
+            graph.ribs.insert(idx2, r2)
+            session.add(r2)
+        if self.modified.get((col, row), 0):
+            self.modified[col, row] = NTET
+        session.commit()
+        session.close()
 
     def identifyChanges(self, row: int, col: int) -> None:
         """Метод, определяющий, какие изменения были проведены с ребром в
@@ -208,9 +230,6 @@ class GraphMatrix(QWidget):
             self.deleteRib(row, col)
             return
         self.appendNewRib(row, col)
-
-
-        pass
 
     def appendNewRib(self, row: int, col: int) -> None:
         """Метод, добавляющий новое ребро"""
