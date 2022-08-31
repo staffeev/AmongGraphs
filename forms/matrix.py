@@ -1,9 +1,10 @@
 from PyQt5.QtWidgets import QWidget, QHeaderView, QMessageBox, \
     QTableWidgetItem as QItem
 from PyQt5 import uic
+from PyQt5.QtCore import Qt
 from functions import str_is_float, get_graph_by_name, create_ribs, \
     get_graph_nodes
-from settings import ARE_YOU_SURE, ENTER_NODE
+from settings import ARE_YOU_SURE, ENTER_NODE, GRAY
 from forms.add_new_data_form import AddNewData
 from models import db_session
 from models.elements import Graph, Rib, Vertex
@@ -179,6 +180,7 @@ class GraphMatrix(QWidget):
 
     def save(self) -> None:
         """Метод для сохранения изменений"""
+        print(self.modified)
         #TODO: save
         pass
 
@@ -191,4 +193,13 @@ class GraphMatrix(QWidget):
         self.nameHeaders()
         self.matrix.resizeRowsToContents()
         self.matrix.resizeColumnsToContents()
+        self.editMainDiagonal()
         self.stretchTable()
+
+    def editMainDiagonal(self) -> None:
+        """Метод, изменяющий главную диагональ матрицы (добавление цвета и
+        невозможность редактирования)"""
+        for i in range(self.get_cols()):
+            item = self.matrix.item(i, i)
+            item.setFlags(Qt.ItemFlag(False))
+            item.setBackground(GRAY)
