@@ -61,11 +61,10 @@ class EdgeList(QWidget):
 
     def validNumber(self, row: int, col: int):
         """Проверка числового значения в ячейке"""
-        try:
-            return bool(float(self.table.item(row, col).text()))
-        except ValueError:
-            QMessageBox.critical(self, "Error", NOT_NUMBER)
-            return
+        if str_is_float(self.table.item(row, col).text()):
+            return True
+        QMessageBox.critical(self, "Error", NOT_NUMBER)
+        return False
 
     def changeItem(self, item) -> None:
         """Метод для сохранения изменений в таблице"""
@@ -154,7 +153,7 @@ class EdgeList(QWidget):
         self.parent.draw_graph()
 
     def checkComplete(self) -> bool:
-        """Метод проверки заполненности полей последней строки таблицы"""
+        """Метод проверки корректности измененных данных"""
         if self.get_last_row() < 0:
             return True
         return all(self.validCell(i, j) for i, j in self.modified)

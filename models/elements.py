@@ -157,3 +157,26 @@ class Graph(SqlAlchemyBase):
             rib for rib in {j for i in chains for j in i.ribs}
             if rib not in self.ribs
         ])
+
+    def get_nodes(self) -> list[str]:
+        """Метод, возвращающий список имен вершин графа"""
+        return list(map(str, self.nodes))
+
+    def get_nodes_by_name(self, *names: str) -> list[Vertex]:
+        """Метод, возвращающий список вершин графа по их именам"""
+        return [i for i in self.nodes if i.name in names]
+
+    def get_nodes_by_index(self, *indexes: int) -> list[Vertex]:
+        """Метод, возвращающий список вершин графа по их именам"""
+        return [self.nodes[i] for i in indexes]
+
+    def get_rib_by_nodes(self, node1: Union[str, int], node2: Union[str, int]) -> Union[Rib, None]:
+        """Метод, возвращающий ребро по именам его вершин"""
+        if isinstance(node1, str):
+            v1, v2 = self.get_nodes_by_name(node1, node2)
+        else:
+            v1, v2 = self.get_nodes_by_index(node1, node2)
+        rib = [i for i in self.ribs if i.points[0] == v1 and i.points[1] == v2]
+        if not rib:
+            return
+        return rib[0]

@@ -17,3 +17,5 @@ EMPTY = "Value cannot be empty"
 NOT_OPEN = "You have not chosen the graph to open"
 ENTER_NODE = "Enter name for node:"
 ENTER_GRAPH = "Enter name for graph:"
+# Некоторые коды
+CHDIR = 'chdir'  # флаг для изменения направления ребра

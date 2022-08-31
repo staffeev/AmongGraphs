@@ -2,11 +2,12 @@ from models import db_session
 from models.elements import *
 from sqlalchemy.orm.collections import InstrumentedList
 
-help(InstrumentedList)
 
 
-# db_session.global_init('graphs.db')
-# session = db_session.create_session()
+db_session.global_init('graphs.db')
+session = db_session.create_session()
+graph = session.query(Graph).first()
+print(session.query(graph.nodes).filter(Vertex.id >= 1).all())
 # print(session.query(Vertex).filter(Vertex.name == "DFFDFSSFSFFHSF").first())
 # v = Vertex(name="a")
 # v2 = Vertex(name="b")

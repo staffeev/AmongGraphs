@@ -3,11 +3,13 @@ from PyQt5.QtWidgets import QWidget, QHeaderView, QMessageBox, \
 from PyQt5 import uic
 from PyQt5.QtCore import Qt
 from functions import str_is_float, get_graph_by_name, create_ribs, \
-    get_graph_nodes
-from settings import ARE_YOU_SURE, ENTER_NODE, GRAY
+    get_graph_nodes, get_rib_by_nodes
+from settings import ARE_YOU_SURE, ENTER_NODE, GRAY, NOT_NUMBER, CHDIR
 from forms.add_new_data_form import AddNewData
 from models import db_session
 from models.elements import Graph, Rib, Vertex
+from sqlalchemy.orm import Session
+from typing import Union
 
 
 class GraphMatrix(QWidget):
@@ -75,8 +77,7 @@ class GraphMatrix(QWidget):
         
     def changeItem(self, item) -> None:
         """Метод для сохранения изменений в таблице"""
-        data = '' if not item.text() else float(item.text())
-        self.modified[item.row(), item.column()] = data
+        self.modified[item.row(), item.column()] = item.text()
 
     def checkUnselected(self, selected, unselected) -> bool:
         """Обработчик валидности невыделенных ячеек"""
@@ -94,7 +95,7 @@ class GraphMatrix(QWidget):
     def validEmpty(self, row: int, col: int) -> bool:
         """Проверка отсутствия значения в ячейке"""
         try:
-            if not self.table.item(row, col).text():
+            if not self.matrix.item(row, col).text():
                 raise AttributeError
             return False
         except AttributeError:
@@ -102,7 +103,10 @@ class GraphMatrix(QWidget):
 
     def validNumber(self, row: int, col: int) -> bool:
         """Проверка числового значения в ячейке"""
-        return str_is_float(self.matrix.item(row, col))
+        if str_is_float(self.matrix.item(row, col).text()):
+            return True
+        QMessageBox.critical(self, "Error", NOT_NUMBER)
+        return False
 
     def loadTable(self) -> None:
         """Метод, загружащий данные в таблицу"""
@@ -118,6 +122,7 @@ class GraphMatrix(QWidget):
                     i, j, QItem(str(ribs.get((str(node1), str(node2)), '')))
                 )
         self.updateTableForm()
+        self.modified = {}
         session.close()
 
     def getSelectedRowsOrCols(self) -> set[int]:
@@ -132,7 +137,7 @@ class GraphMatrix(QWidget):
     def countSelected(self, values: dict[int]) -> set[int]:
         """Метод, возвращающий полностью выделенные строки (столбцы) таблицы"""
         num_cols = self.get_cols()
-        return set(filter(lambda x: values[x] == num_cols, values.keys()))
+        return set(filter(lambda x: values[x] == num_cols - 1, values.keys()))
 
     def addNode(self) -> None:
         """Метод для добавления вершины в граф"""
@@ -180,9 +185,77 @@ class GraphMatrix(QWidget):
 
     def save(self) -> None:
         """Метод для сохранения изменений"""
+        if not self.checkComplete():
+            return
         print(self.modified)
+        session = db_session.create_session()
+        for i, j in self.modified:
+            self.identifyChanges(i, j, session)
+            pass
         #TODO: save
+        session.close()
         pass
+
+    def identifyChanges(self, row: int, col: int) -> None:
+        """Метод, определяющий, какие изменения были проведены с ребром в
+        матрице и в заивимости от этого выполняющий соответствующие действия"""
+        if not self.modified[row, col]:
+            self.deleteRib(row, col)
+            return
+        self.appendNewRib(row, col)
+
+
+        pass
+
+    def appendNewRib(self, row: int, col: int) -> None:
+        """Метод, добавляющий новое ребро. Возвращает булевое значение -
+        было ребро добавлено или нет (или ребро уже существует и его
+        значение надо изменить)"""
+        item1 = self.modified[row, col]
+        item2 = self.modified.get((row, col), None)
+        session = db_session.create_session()
+        if item1 == item2:
+            self.changeRib(row, col) ## TODO
+
+
+        pass
+
+    def changeRib(self, row: int, col: int, flag=None) -> None:
+        """Метод, изменяющий уже существующее ребро"""
+        session = db_session.create_session()
+        graph = get_graph_by_name(session, self.graph_name)
+
+        if flag == CHDIR:
+            pass
+
+        # TODO: change rib
+        pass
+
+    def deleteRib(self, row: int, col: int) -> None:
+        """Метод, удаляющий ребро"""
+        session = db_session.create_session()
+        graph = get_graph_by_name(session, self.graph_name)
+        rib = graph.get_rib_by_nodes(row, col)
+        item2 = self.get_item(col, row)
+        if item2 != rib.weight:
+            session.delete(rib)
+            session.commit()
+            session.close()
+            return
+        session.close()
+        self.changeRib(col, row, CHDIR) ## TODO !!!
+
+
+
+
+        # TODO: delete rib
+        pass
+
+    def checkComplete(self) -> bool:
+        """Метод проверки корректности измененных данных"""
+        if self.get_cols() < 1:
+            return True
+        return all(self.validCell(i, j) for i, j in self.modified)
 
     def get_cols(self) -> int:
         """Метод, возвращающий количество столбцов в таблице"""
@@ -203,3 +276,10 @@ class GraphMatrix(QWidget):
             item = self.matrix.item(i, i)
             item.setFlags(Qt.ItemFlag(False))
             item.setBackground(GRAY)
+
+    def get_item(self, row: int, col: int) -> Union[str, None]:
+        """Метод, возвращающий значение ячейки таблицы"""
+        item = self.matrix.item(row, col)
+        if item is not None or not item.text():
+            return item.text()
+        return item

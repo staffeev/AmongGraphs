@@ -51,6 +51,23 @@ def create_ribs(graph: Graph) -> dict:
     return ribs
 
 
+def get_rib_by_nodes(node1: str, node2: str, graph: Graph) -> Union[Rib, None]:
+    """Функция, возвращающая ребро графа по именам ее вершин.
+    Если ребра нет, возвращает None"""
+    nodes = list(filter(lambda x: x.name in {node1, node2}, graph.nodes))
+    if len(nodes) != 2:
+        return
+    v1, v2 = nodes
+    if v1.name == node2:
+        v1, v2 = v2, v1
+    rib = [x for x in graph.ribs if x.points[0] == v1 and x.points[1] == v2]
+    if not rib:
+        return
+    return rib[0]
+
+
+
+
 def create_matrix(graph: Graph) -> list[list]:
     # TODO: create matrix
     pass
