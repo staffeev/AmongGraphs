@@ -101,6 +101,8 @@ class Mentor(QMainWindow):
             session.delete(graph)
             session.commit()
             self.clearTree()
+            if self.window is not None:
+                self.window.close()
         session.close()
 
     def saveChanges(self) -> None:

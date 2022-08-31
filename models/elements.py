@@ -102,7 +102,7 @@ class Rib(SqlAlchemyBase):
         return f"{self.nodes[0].name}-{self.nodes[1].name}"
 
     def __repr__(self):
-        return f"Rib({str(self)})"
+        return f"Rib({str(self)}, {self.weight})"
 
 
 class Chain(SqlAlchemyBase):

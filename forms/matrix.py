@@ -4,7 +4,7 @@ from PyQt5 import uic
 from PyQt5.QtCore import Qt
 from functions import str_is_float, get_graph_by_name, create_ribs, \
     get_graph_nodes, get_rib_by_nodes
-from settings import ARE_YOU_SURE, ENTER_NODE, GRAY, NOT_NUMBER, CHDIR
+from settings import ARE_YOU_SURE, ENTER_NODE, GRAY, NOT_NUMBER, CHDIR, NWGHT, NTET
 from forms.add_new_data_form import AddNewData
 from models import db_session
 from models.elements import Graph, Rib, Vertex
@@ -77,7 +77,8 @@ class GraphMatrix(QWidget):
         
     def changeItem(self, item) -> None:
         """Метод для сохранения изменений в таблице"""
-        self.modified[item.row(), item.column()] = item.text()
+        if item.row() != item.column():
+            self.modified[item.row(), item.column()] = item.text()
 
     def checkUnselected(self, selected, unselected) -> bool:
         """Обработчик валидности невыделенных ячеек"""
@@ -155,7 +156,6 @@ class GraphMatrix(QWidget):
         session.close()
         self.expandTable()
         self.updateTableForm()
-        # TODO: addNode
 
     def expandTable(self) -> None:
         """Метод, расширяющий матрицу на одну строку и один столбец"""
@@ -183,16 +183,23 @@ class GraphMatrix(QWidget):
         session.close()
         self.loadTable()
 
-    def save(self) -> None:
+    def save(self):
         """Метод для сохранения изменений"""
         if not self.checkComplete():
             return
         print(self.modified)
         for i, j in self.modified:
+            if self.modified[i, j] == NTET:
+                continue
             self.identifyChanges(i, j)
+            session = db_session.create_session()
+            graph = get_graph_by_name(session, self.graph_name)
+            print(graph.ribs)
+            print()
+            session.close()
             pass
-        #TODO: save
-        pass
+        self.modified = {}
+        self.parent.draw_graph()
 
     def identifyChanges(self, row: int, col: int) -> None:
         """Метод, определяющий, какие изменения были проведены с ребром в
@@ -206,18 +213,19 @@ class GraphMatrix(QWidget):
         pass
 
     def appendNewRib(self, row: int, col: int) -> None:
-        """Метод, добавляющий новое ребро. Возвращает булевое значение -
-        было ребро добавлено или нет (или ребро уже существует и его
-        значение надо изменить)"""
-        item1 = self.modified[row, col]
-        item2 = self.get_item(col, row)
-        print(item1, item2)
-        if item1 == item2:
+        """Метод, добавляющий новое ребро"""
+        if self.modified[row, col] == self.get_item(col, row):
             self.changeRib(col, row, CHDIR) ## TODO
+            if self.modified.pop((col, row), None) is not None:
+                self.modified[col, row] = NTET
             return
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
         nodes = graph.get_nodes_by_index(row, col)
+        if graph.get_rib_by_nodes(row, col) is not None:
+            session.close()
+            self.changeRib(row, col, NWGHT)
+            return
         rib = Rib(weight=float(self.modified[row, col]), is_directed=True)
         rib.add_nodes(*nodes)
         graph.add_ribs(rib)
@@ -230,8 +238,15 @@ class GraphMatrix(QWidget):
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
         rib = graph.get_rib_by_nodes(row, col)
+        inv_rib = graph.get_rib_by_nodes(col, row)
+        if rib is not None and inv_rib is not None:
+            self.deleteRib(col, row)
+        if rib is None:
+            rib = graph.get_rib_by_nodes(col, row)
         if flag == CHDIR:
             rib.change_dir()
+        elif flag == NWGHT:
+            rib.change_weight(self.modified[row, col])
         session.commit()
         session.close()
         # TODO: change rib
@@ -242,6 +257,8 @@ class GraphMatrix(QWidget):
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
         rib = graph.get_rib_by_nodes(row, col)
+        if rib is None:
+            return
         item2 = self.get_item(col, row)
         if item2 != rib.weight:
             session.delete(rib)
@@ -249,13 +266,9 @@ class GraphMatrix(QWidget):
             session.close()
             return
         session.close()
-        self.changeRib(col, row, CHDIR) ## TODO !!!
-
-
-
-
-        # TODO: delete rib
-        pass
+        self.changeRib(col, row, CHDIR)
+        if self.modified.pop((col, row), None) is not None:
+            self.modified[col, row] = NTET
 
     def checkComplete(self) -> bool:
         """Метод проверки корректности измененных данных"""
@@ -278,7 +291,6 @@ class GraphMatrix(QWidget):
     def editMainDiagonal(self) -> None:
         """Метод, изменяющий главную диагональ матрицы (добавление цвета и
         невозможность редактирования)"""
-        print(self.get_cols())
         for i in range(self.get_cols()):
             self.matrix.setItem(i, i, QItem(''))
             item = self.matrix.item(i, i)

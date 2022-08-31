@@ -19,3 +19,5 @@ ENTER_NODE = "Enter name for node:"
 ENTER_GRAPH = "Enter name for graph:"
 # Некоторые коды
 CHDIR = 'chdir'  # флаг для изменения направления ребра
+NWGHT = 'nwght'
+NTET = 'not_edit_value'
