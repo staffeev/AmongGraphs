@@ -1,6 +1,7 @@
 import sqlalchemy
 from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Float
 from sqlalchemy.orm import relation
+from sqlalchemy.orm.collections import attribute_mapped_collection
 from .db_session import SqlAlchemyBase
 from math import inf
 from typing import Union
@@ -51,12 +52,19 @@ class Rib(SqlAlchemyBase):
     __tablename__ = "ribs"
     serialize_rules = ('-nodes', '-graph')
     id = Column(Integer, primary_key=True, autoincrement=True)
-    weight = Column(Float, default=1)
+    weight = Column(Float, default=1.0)
     is_directed = Column(Boolean, default=False)
     is_bridge = Column(Boolean, default=False)
     graph_id = Column(Integer, ForeignKey('graphs.id'))
     nodes = relation("Vertex", secondary="vertex_to_rib",
                       back_populates="ribs")
+
+    @property
+    def key(self):
+        return self.nodes[0], self.nodes[1]
+
+    def __init__(self):
+        self.old_key = None
 
     def add_nodes(self, start: Vertex, end: Vertex) -> None:
         """Метод добавления начальной и конечной вершины ребра"""
@@ -82,27 +90,44 @@ class Rib(SqlAlchemyBase):
             self.change_dir(arg)
         elif isinstance(arg, str):
             self.replace_node(idx, arg)
-            # self.nodes[idx].rename(arg)
 
-    def replace_node(self, idx, node_name: str) -> None:
+    def replace_nodes(self, p1=None, p2=None) -> None:
         """Метод для замены вершин графа"""
-        try:
-            node = [i for i in self.graph.nodes if i.name == node_name][0]
-        except IndexError:
-            node = Vertex()
-            node.rename(node_name)
+        if p1 is not None:
+            self.replace_node(0, p1)
+        if p2 is not None:
+            self.replace_node(1, p2)
+
+    def replace_node(self, idx, node: Union[str, Vertex]) -> None:
+        """Метод для замены вершины графа"""
+        self.old_key = self.key
+        if isinstance(node, str):
+            node_name = node
+            try:
+                node = self.graph.get_nodes_by_name(node)[0]
+            except IndexError:
+                node = Vertex()
+                node.rename(node_name)
         try:
             self.nodes.pop(idx)
             self.nodes.insert(idx, node)
         except IndexError:
             self.nodes.append(node)
         self.graph.add_nodes(node)
+        self.update_graph_collection()
 
     def __str__(self):
         return f"{self.nodes[0].name}-{self.nodes[1].name}"
 
     def __repr__(self):
-        return f"Rib({str(self)}, {self.weight})"
+        return f"Rib({str(self)}; {self.weight})"
+
+    def update_graph_collection(self):
+        """Метод для обновления словаря графа"""
+        graph = self.graph
+        graph.ribs[self.key] = self
+        graph.ribs.pop(self.old_key)
+        self.graph = graph
 
 
 class Chain(SqlAlchemyBase):
@@ -138,7 +163,8 @@ class Graph(SqlAlchemyBase):
     is_directed = Column(Boolean, default=False)
     is_connected = Column(Boolean, default=False)
     nodes = relation("Vertex", backref="graph", cascade="all, delete-orphan")
-    ribs = relation("Rib", backref="graph", cascade="all, delete-orphan")
+    ribs = relation("Rib", backref="graph", cascade="all, delete-orphan",
+                    collection_class=attribute_mapped_collection("key"))
     chains = relation("Chain", backref="graph", cascade="all, delete-orphan")
 
     def add_nodes(self, *vertexes: Vertex) -> None:
@@ -147,7 +173,9 @@ class Graph(SqlAlchemyBase):
 
     def add_ribs(self, *ribs: Rib) -> None:
         """Метод добавления ребер в граф"""
-        [self.ribs.append(rib) for rib in ribs if rib not in self.ribs]
+        for rib in ribs:
+            self.ribs[rib.key] = rib
+        # [self.ribs.append(rib) for rib in ribs if rib not in self.ribs]
         self.add_nodes(*[
             vert for vert in {j for i in ribs for j in i.nodes}
             if vert not in self.nodes
