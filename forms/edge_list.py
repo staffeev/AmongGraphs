@@ -83,7 +83,7 @@ class EdgeList(QWidget):
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
         self.table.setRowCount(len(graph.ribs))
-        for i, rib in enumerate(graph.ribs):
+        for i, rib in enumerate(graph.get_ordered_ribs()):
             self.ribPresentation(i, rib)
         self.table.resizeRowsToContents()
         self.modified = {}
@@ -91,8 +91,8 @@ class EdgeList(QWidget):
 
     def ribPresentation(self, row: int, rib: Rib) -> None:
         """"Метод для занесения ребра в таблицу"""
-        self.table.setItem(row, 0, QItem(rib.nodes[0].name))
-        self.table.setItem(row, 1, QItem(rib.nodes[1].name))
+        self.table.setItem(row, 0, QItem(str(rib.nodes[0])))
+        self.table.setItem(row, 1, QItem(str(rib.nodes[1])))
         self.table.setItem(row, 2, QItem(str(rib.weight)))
         item = self.get_table_checkbox(row, rib.is_directed)
         self.table.setCellWidget(row, 3, item)
@@ -124,8 +124,8 @@ class EdgeList(QWidget):
         if not idx:
             return
         session = db_session.create_session()
-        graph = get_graph_by_name(session, self.graph_name)
-        ribs = [graph.ribs[i] for i in idx]
+        ribs = get_graph_by_name(session, self.graph_name).get_ordered_ribs()
+        ribs = [ribs[i] for i in idx]
         flag = QMessageBox.question(
             self, "Delete ribs", f"{ARE_YOU_SURE} ribs {', '.join(map(str, ribs))}"
         )
@@ -142,8 +142,9 @@ class EdgeList(QWidget):
         """Метод сохранения изменений в БД"""
         if not self.checkComplete():
             return
+        print(self.modified)
         session = db_session.create_session()
-        ribs = get_graph_by_name(session, self.graph_name).ribs
+        ribs = get_graph_by_name(session, self.graph_name).get_ordered_ribs()
         [ribs[i].change_attrs(j, self.modified[i, j]) for i, j in self.modified]
         session.commit()
         session.close()

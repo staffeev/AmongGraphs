@@ -62,7 +62,10 @@ class Rib(SqlAlchemyBase):
 
     @property
     def key(self):
-        return self.nodes[0], self.nodes[1]
+        try:
+            return self.nodes[0], self.nodes[1]
+        except IndexError:
+            return None
 
     def add_nodes(self, start: Vertex, end: Vertex) -> None:
         """Метод добавления начальной и конечной вершины ребра"""
@@ -111,21 +114,26 @@ class Rib(SqlAlchemyBase):
             self.nodes.insert(idx, node)
         except IndexError:
             self.nodes.append(node)
+        print(self.nodes)
         self.graph.add_nodes(node)
         self.update_graph_collection()
 
     def __str__(self):
-        return f"{self.nodes[0].name}-{self.nodes[1].name}"
+        return f"{str(self.nodes[0])}-{str(self.nodes[1])}"
 
     def __repr__(self):
         return f"Rib({str(self)}; {self.weight})"
 
-    def update_graph_collection(self):
+    def update_graph_collection(self) -> None:
         """Метод для обновления словаря графа"""
+        if self.key is None:
+            return
         graph = self.graph
         graph.ribs[self.key] = self
-        graph.ribs.pop(self.old_key)
+        # if self.old_key in graph.ribs
+        graph.ribs.pop(self.old_key, None)
         self.graph = graph
+        print(self.graph.ribs)
 
 
 class Chain(SqlAlchemyBase):
@@ -173,7 +181,6 @@ class Graph(SqlAlchemyBase):
         """Метод добавления ребер в граф"""
         for rib in ribs:
             self.ribs[rib.key] = rib
-        # [self.ribs.append(rib) for rib in ribs if rib not in self.ribs]
         self.add_nodes(*[
             vert for vert in {j for i in ribs for j in i.nodes}
             if vert not in self.nodes
@@ -199,10 +206,16 @@ class Graph(SqlAlchemyBase):
         """Метод, возвращающий список вершин графа по их именам"""
         return [self.nodes[i] for i in indexes]
 
-    def get_rib_by_nodes(self, node1: Union[str, int], node2: Union[str, int]) -> Union[Rib, None]:
+    def get_rib_by_nodes(self, node1: Union[str, int, Vertex], node2: Union[str, int, Vertex]) -> Union[Rib, None]:
         """Метод, возвращающий ребро по именам его вершин"""
         if isinstance(node1, str):
             v1, v2 = self.get_nodes_by_name(node1, node2)
-        else:
+        elif isinstance(node1, int):
             v1, v2 = self.get_nodes_by_index(node1, node2)
+        else:
+            v1, v2 = node1, node2
         return self.ribs.get((v1, v2), None)
+
+    def get_ordered_ribs(self) -> list[Rib]:
+        """Метод, возвращающий список ребер, сортированнных по id"""
+        return sorted(self.ribs.values(), key=lambda x: x.id)
