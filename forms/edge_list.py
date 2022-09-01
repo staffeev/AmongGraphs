@@ -3,9 +3,10 @@ from PyQt5.QtWidgets import QWidget, QTableWidgetItem as QItem, QHeaderView, \
 from forms.table_checkbox import TableCheckbox
 from PyQt5 import uic
 from models.elements import Rib
-from settings import ARE_YOU_SURE, NOT_NUMBER, EMPTY
+from settings import ARE_YOU_SURE, NOT_NUMBER, EMPTY, NOT_DIF
 from functions import get_graph_by_name, str_is_float
 from models import db_session
+from typing import Union
 
 
 class EdgeList(QWidget):
@@ -45,7 +46,7 @@ class EdgeList(QWidget):
             return False
         if col == self.get_last_col() - 1:
             return self.validNumber(row, col)
-        return True
+        return self.validDifNodes(row, col)
 
     def validEmpty(self, row: int, col: int) -> bool:
         """Проверка наличия значения в ячейке"""
@@ -59,12 +60,22 @@ class EdgeList(QWidget):
             QMessageBox.warning(self, "Error", EMPTY)
             return False
 
-    def validNumber(self, row: int, col: int):
+    def validNumber(self, row: int, col: int) -> bool:
         """Проверка числового значения в ячейке"""
         if str_is_float(self.table.item(row, col).text()):
             return True
         QMessageBox.critical(self, "Error", NOT_NUMBER)
         return False
+
+    def validDifNodes(self, row: int, col: int) -> bool:
+        """Проверка на отсутствие петли (ребро между одинаковыми вершинами"""
+        item1 = self.get_item(row, col)
+        item2 = self.get_item(row, (col + 1) % 2)
+        if item1 == item2:
+            QMessageBox.critical(self, 'Error', NOT_DIF)
+            return False
+        return True
+
 
     def changeItem(self, item) -> None:
         """Метод для сохранения изменений в таблице"""
@@ -83,7 +94,7 @@ class EdgeList(QWidget):
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
         self.table.setRowCount(len(graph.ribs))
-        for i, rib in enumerate(graph.ribs):
+        for i, rib in enumerate(graph.get_ordered_ribs()):
             self.ribPresentation(i, rib)
         self.table.resizeRowsToContents()
         self.modified = {}
@@ -91,8 +102,8 @@ class EdgeList(QWidget):
 
     def ribPresentation(self, row: int, rib: Rib) -> None:
         """"Метод для занесения ребра в таблицу"""
-        self.table.setItem(row, 0, QItem(rib.nodes[0].name))
-        self.table.setItem(row, 1, QItem(rib.nodes[1].name))
+        self.table.setItem(row, 0, QItem(str(rib.nodes[0])))
+        self.table.setItem(row, 1, QItem(str(rib.nodes[1])))
         self.table.setItem(row, 2, QItem(str(rib.weight)))
         item = self.get_table_checkbox(row, rib.is_directed)
         self.table.setCellWidget(row, 3, item)
@@ -124,8 +135,8 @@ class EdgeList(QWidget):
         if not idx:
             return
         session = db_session.create_session()
-        graph = get_graph_by_name(session, self.graph_name)
-        ribs = [graph.ribs[i] for i in idx]
+        ribs = get_graph_by_name(session, self.graph_name).get_ordered_ribs()
+        ribs = [ribs[i] for i in idx]
         flag = QMessageBox.question(
             self, "Delete ribs", f"{ARE_YOU_SURE} ribs {', '.join(map(str, ribs))}"
         )
@@ -142,8 +153,9 @@ class EdgeList(QWidget):
         """Метод сохранения изменений в БД"""
         if not self.checkComplete():
             return
+        print(self.modified)
         session = db_session.create_session()
-        ribs = get_graph_by_name(session, self.graph_name).ribs
+        ribs = get_graph_by_name(session, self.graph_name).get_ordered_ribs()
         [ribs[i].change_attrs(j, self.modified[i, j]) for i, j in self.modified]
         session.commit()
         session.close()
@@ -175,4 +187,11 @@ class EdgeList(QWidget):
         item.setState(value)
         item.checkbox.clicked.connect(self.changeCheckbox)
         return item
+
+    def get_item(self, row: int, col: int) -> Union[str, None]:
+        """Возвращает значение из таблицы"""
+        item = self.table.item(row, col)
+        if item is None:
+            return None
+        return item.text()
 
