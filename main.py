@@ -162,6 +162,9 @@ class Mentor(QMainWindow):
 
     def draw_graph(self):
         """Функиця для рисования графа в окне приложения"""
+        if self.graph_name is None:
+            QMessageBox.warning(self, "Open graph", NOT_OPEN)
+            return
         self.create_graph()
         self.plt_figure_to_pil_image(plt)
         p = ImageQt(self.image)

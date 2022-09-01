@@ -3,9 +3,10 @@ from PyQt5.QtWidgets import QWidget, QTableWidgetItem as QItem, QHeaderView, \
 from forms.table_checkbox import TableCheckbox
 from PyQt5 import uic
 from models.elements import Rib
-from settings import ARE_YOU_SURE, NOT_NUMBER, EMPTY
+from settings import ARE_YOU_SURE, NOT_NUMBER, EMPTY, NOT_DIF
 from functions import get_graph_by_name, str_is_float
 from models import db_session
+from typing import Union
 
 
 class EdgeList(QWidget):
@@ -45,7 +46,7 @@ class EdgeList(QWidget):
             return False
         if col == self.get_last_col() - 1:
             return self.validNumber(row, col)
-        return True
+        return self.validDifNodes(row, col)
 
     def validEmpty(self, row: int, col: int) -> bool:
         """Проверка наличия значения в ячейке"""
@@ -59,12 +60,22 @@ class EdgeList(QWidget):
             QMessageBox.warning(self, "Error", EMPTY)
             return False
 
-    def validNumber(self, row: int, col: int):
+    def validNumber(self, row: int, col: int) -> bool:
         """Проверка числового значения в ячейке"""
         if str_is_float(self.table.item(row, col).text()):
             return True
         QMessageBox.critical(self, "Error", NOT_NUMBER)
         return False
+
+    def validDifNodes(self, row: int, col: int) -> bool:
+        """Проверка на отсутствие петли (ребро между одинаковыми вершинами"""
+        item1 = self.get_item(row, col)
+        item2 = self.get_item(row, (col + 1) % 2)
+        if item1 == item2:
+            QMessageBox.critical(self, 'Error', NOT_DIF)
+            return False
+        return True
+
 
     def changeItem(self, item) -> None:
         """Метод для сохранения изменений в таблице"""
@@ -176,4 +187,11 @@ class EdgeList(QWidget):
         item.setState(value)
         item.checkbox.clicked.connect(self.changeCheckbox)
         return item
+
+    def get_item(self, row: int, col: int) -> Union[str, None]:
+        """Возвращает значение из таблицы"""
+        item = self.table.item(row, col)
+        if item is None:
+            return None
+        return item.text()
 

@@ -25,6 +25,7 @@ def create_ribs(graph: Graph) -> dict:
     """Функция, создающая словарь (список) ребер графа"""
     ribs = {}
     for rib in graph.ribs.values():
+        print(rib.nodes)
         ribs[rib.nodes[0].name, rib.nodes[1].name] = rib.weight
         if not rib.is_directed:
             ribs[rib.nodes[1].name, rib.nodes[0].name] = rib.weight
