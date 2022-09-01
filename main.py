@@ -62,6 +62,8 @@ class Mentor(QMainWindow):
         if self.graph_name is None:
             QMessageBox.warning(self, "Open graph", NOT_OPEN)
             return
+        if self.window is not None:
+            self.window.close()
         if self.sender() == self.actionEdit_list:
             self.window = EdgeList(self.graph_name, self)
         elif self.sender() == self.actionEdit_matrix:

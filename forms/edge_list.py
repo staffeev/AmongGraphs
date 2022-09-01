@@ -17,6 +17,7 @@ class EdgeList(QWidget):
         self.parent = parent
         self.graph_name = graph_name
         self.modified = {}
+        self.new_ribs = 0
         self.initUI()
         self.loadTable()
 
@@ -62,7 +63,7 @@ class EdgeList(QWidget):
 
     def validNumber(self, row: int, col: int) -> bool:
         """Проверка числового значения в ячейке"""
-        if str_is_float(self.table.item(row, col).text()):
+        if str_is_float(self.get_item(row, col)):
             return True
         QMessageBox.critical(self, "Error", NOT_NUMBER)
         return False
@@ -71,11 +72,10 @@ class EdgeList(QWidget):
         """Проверка на отсутствие петли (ребро между одинаковыми вершинами"""
         item1 = self.get_item(row, col)
         item2 = self.get_item(row, (col + 1) % 2)
-        if item1 == item2:
+        if item1 == item2 and item1 is not None and item2 is not None:
             QMessageBox.critical(self, 'Error', NOT_DIF)
             return False
         return True
-
 
     def changeItem(self, item) -> None:
         """Метод для сохранения изменений в таблице"""
@@ -120,46 +120,70 @@ class EdgeList(QWidget):
         )
         item = self.get_table_checkbox(last_row, False)
         self.table.setCellWidget(last_row, last_col, item)
-        rib = Rib()
-        session = db_session.create_session()
-        graph = get_graph_by_name(session, self.graph_name)
+        self.new_ribs += 1
+        # rib = Rib()
+        # session = db_session.create_session()
+        # graph = get_graph_by_name(session, self.graph_name)
         [self.modified.update({(last_row, i): ''}) for i in range(3)]
-        graph.add_ribs(rib)
-        session.add(rib)
-        session.commit()
-        session.close()
+        # graph.add_ribs(rib)
+        # session.add(rib)
+        # session.commit()
+        # session.close()
 
     def deleteRow(self) -> None:
         """Метод для удаления ребра из таблицы"""
         idx = {i.row() for i in self.table.selectedIndexes()}
         if not idx:
             return
-        session = db_session.create_session()
-        ribs = get_graph_by_name(session, self.graph_name).get_ordered_ribs()
-        ribs = [ribs[i] for i in idx]
         flag = QMessageBox.question(
-            self, "Delete ribs", f"{ARE_YOU_SURE} ribs {', '.join(map(str, ribs))}"
+            self, "Delete ribs",
+            f"{ARE_YOU_SURE} selected ribs"
         )
         if flag == QMessageBox.No:
-            session.close()
             return
-        [session.delete(rib) for rib in ribs]
-        [self.modified.pop((i, j), None) for i in idx for j in range(self.table.columnCount())]
+        # print(self.modified)
+        [self.table.removeRow(i) for i in idx]
+        self.shiftModifies(idx)
+        # print(self.modified)
+        # print()
+        self.deleteEdges(idx)
+
+    def deleteEdges(self, idx) -> None:
+        """Удаляет выделенные в списке ребра из графа, если
+        они в нем существуют"""
+        session = db_session.create_session()
+        g_ribs = get_graph_by_name(session, self.graph_name).get_ordered_ribs()
+        ribs_to_del = []
+        for i in idx:
+            if i < len(g_ribs):
+                ribs_to_del.append(g_ribs[i])
+            else:
+                self.new_ribs -= 1
+        # ribs = [ribs[i] for i in idx if i < len(ribs)]
+        # ribs = [ribs[i] for i in idx]
+        # self.new_ribs -= sum([1 for i in idx if i > len(ribs)])
+        [session.delete(rib) for rib in ribs_to_del]
         session.commit()
         session.close()
-        self.loadTable()
 
     def save(self) -> None:
         """Метод сохранения изменений в БД"""
         if not self.checkComplete():
             return
-        print(self.modified)
+        # print(self.modified)
         session = db_session.create_session()
-        ribs = get_graph_by_name(session, self.graph_name).get_ordered_ribs()
+        graph = get_graph_by_name(session, self.graph_name)
+        ribs = graph.get_ordered_ribs()
+        new_ribs = [Rib() for _ in range(self.new_ribs)]
+        session.add_all(new_ribs)
+        session.commit()
+        graph.add_ribs(*new_ribs)
+        ribs.extend(new_ribs)
         [ribs[i].change_attrs(j, self.modified[i, j]) for i, j in self.modified]
         session.commit()
         session.close()
         self.modified = {}
+        self.new_ribs = 0
         self.parent.showTreeOfElements()
         self.parent.draw_graph()
 
@@ -195,3 +219,18 @@ class EdgeList(QWidget):
             return None
         return item.text()
 
+    def shiftModifies(self, idx) -> None:
+        """Сдвигает строки в измененных данных при удалении строк в таблице"""
+        [self.modified.pop((i, j), None) for i in idx for j in
+         range(self.table.columnCount())]
+        print(self.modified)
+        new_mod = {}
+        for i, j in self.modified:
+            new_mod[i - self.calcShift(i, idx), j] = self.modified[i, j]
+        self.modified = new_mod
+        print(self.modified)
+        print()
+
+    def calcShift(self, row: int, idx: list[int]) -> int:
+        """Считает смещение для строки таблицы"""
+        return sum([1 for i in idx if i < row])

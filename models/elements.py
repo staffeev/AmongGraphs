@@ -65,7 +65,7 @@ class Rib(SqlAlchemyBase):
         try:
             return self.nodes[0], self.nodes[1]
         except IndexError:
-            return None
+            return self.id
 
     def add_nodes(self, start: Vertex, end: Vertex) -> None:
         """Метод добавления начальной и конечной вершины ребра"""
@@ -114,7 +114,6 @@ class Rib(SqlAlchemyBase):
             self.nodes.insert(idx, node)
         except IndexError:
             self.nodes.append(node)
-        print(self.nodes)
         self.graph.add_nodes(node)
         self.update_graph_collection()
 
@@ -133,7 +132,7 @@ class Rib(SqlAlchemyBase):
         # if self.old_key in graph.ribs
         graph.ribs.pop(self.old_key, None)
         self.graph = graph
-        print(self.graph.ribs)
+        # print(self.graph.ribs)
 
 
 class Chain(SqlAlchemyBase):
