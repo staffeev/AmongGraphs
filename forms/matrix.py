@@ -199,8 +199,6 @@ class GraphMatrix(QWidget):
         rib = graph.get_rib_by_nodes(row, col)
         inv_rib = graph.get_rib_by_nodes(col, row)
         item1, item2 = self.get_item(row, col), self.get_item(col, row)
-        idx1 = len(graph.ribs) if rib is None else graph.ribs.index(rib)
-        idx2 = len(graph.ribs) if inv_rib is None else graph.ribs.index(inv_rib)
         if rib is not None:
             session.delete(rib)
         if inv_rib is not None:
@@ -208,12 +206,12 @@ class GraphMatrix(QWidget):
         if item1:
             r1 = Rib(weight=float(item1), is_directed=bool(item2 != item1))
             r1.add_nodes(*nodes)
-            graph.ribs.insert(idx1, r1)
+            graph.add_ribs(r1)
             session.add(r1)
         if item1 != item2 and item2:
             r2 = Rib(weight=float(item2), is_directed=True)
             r2.add_nodes(nodes[1], nodes[0])
-            graph.ribs.insert(idx2, r2)
+            graph.add_ribs(r2)
             session.add(r2)
         if self.modified.get((col, row), 0):
             self.modified[col, row] = NTET

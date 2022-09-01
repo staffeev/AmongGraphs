@@ -58,13 +58,11 @@ class Rib(SqlAlchemyBase):
     graph_id = Column(Integer, ForeignKey('graphs.id'))
     nodes = relation("Vertex", secondary="vertex_to_rib",
                       back_populates="ribs")
+    old_key = None  # Значение прошлого ключа для словаря графа
 
     @property
     def key(self):
         return self.nodes[0], self.nodes[1]
-
-    def __init__(self):
-        self.old_key = None
 
     def add_nodes(self, start: Vertex, end: Vertex) -> None:
         """Метод добавления начальной и конечной вершины ребра"""
@@ -207,7 +205,4 @@ class Graph(SqlAlchemyBase):
             v1, v2 = self.get_nodes_by_name(node1, node2)
         else:
             v1, v2 = self.get_nodes_by_index(node1, node2)
-        rib = [i for i in self.ribs if i.nodes[0] == v1 and i.nodes[1] == v2]
-        if not rib:
-            return
-        return rib[0]
+        return self.ribs.get((v1, v2), None)

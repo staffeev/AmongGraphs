@@ -19,7 +19,7 @@ print(g.ribs)
 r.replace_nodes(p1=v3)
 print(g.ribs)
 r.replace_nodes(p1=v2, p2=v3)
-print(g.ribs)
+print(g.ribs.get((v1, v2), None))
 
 # Base = declarative_base()
 #
