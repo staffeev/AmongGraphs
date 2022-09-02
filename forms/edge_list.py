@@ -3,7 +3,8 @@ from PyQt5.QtWidgets import QWidget, QTableWidgetItem as QItem, QHeaderView, \
 from forms.table_checkbox import TableCheckbox
 from PyQt5 import uic
 from models.elements import Rib
-from settings import ARE_YOU_SURE, NOT_NUMBER, EMPTY, NOT_DIF
+from settings import ARE_YOU_SURE, NOT_NUMBER, EMPTY, NOT_DIF_NODES, \
+    NOT_DIF_EDGES
 from functions import get_graph_by_name, str_is_float
 from models import db_session
 from typing import Union
@@ -73,7 +74,16 @@ class EdgeList(QWidget):
         item1 = self.get_item(row, col)
         item2 = self.get_item(row, (col + 1) % 2)
         if item1 == item2 and item1 is not None and item2 is not None:
-            QMessageBox.critical(self, 'Error', NOT_DIF)
+            QMessageBox.critical(self, 'Error', NOT_DIF_NODES)
+            return False
+        return True
+
+    def validDifEdges(self) -> bool:
+        """Проверка отсутствия одинааковых ребер в списке"""
+        dif = {f'{self.get_item(i, 0)}{self.get_item(i, 1)}' for i in range(
+            self.table.rowCount())}
+        if len(dif) != self.table.rowCount():
+            QMessageBox.critical(self, "Error", NOT_DIF_EDGES)
             return False
         return True
 
@@ -121,14 +131,7 @@ class EdgeList(QWidget):
         item = self.get_table_checkbox(last_row, False)
         self.table.setCellWidget(last_row, last_col, item)
         self.new_ribs += 1
-        # rib = Rib()
-        # session = db_session.create_session()
-        # graph = get_graph_by_name(session, self.graph_name)
         [self.modified.update({(last_row, i): ''}) for i in range(3)]
-        # graph.add_ribs(rib)
-        # session.add(rib)
-        # session.commit()
-        # session.close()
 
     def deleteRow(self) -> None:
         """Метод для удаления ребра из таблицы"""
@@ -139,13 +142,11 @@ class EdgeList(QWidget):
             self, "Delete ribs",
             f"{ARE_YOU_SURE} selected ribs"
         )
+        print(idx)
         if flag == QMessageBox.No:
             return
-        # print(self.modified)
-        [self.table.removeRow(i) for i in idx]
+        [self.table.removeRow(i) for i in sorted(idx, reverse=True)]
         self.shiftModifies(idx)
-        # print(self.modified)
-        # print()
         self.deleteEdges(idx)
 
     def deleteEdges(self, idx) -> None:
@@ -159,9 +160,6 @@ class EdgeList(QWidget):
                 ribs_to_del.append(g_ribs[i])
             else:
                 self.new_ribs -= 1
-        # ribs = [ribs[i] for i in idx if i < len(ribs)]
-        # ribs = [ribs[i] for i in idx]
-        # self.new_ribs -= sum([1 for i in idx if i > len(ribs)])
         [session.delete(rib) for rib in ribs_to_del]
         session.commit()
         session.close()
@@ -191,7 +189,13 @@ class EdgeList(QWidget):
         """Метод проверки корректности измененных данных"""
         if self.get_last_row() < 0:
             return True
-        return all(self.validCell(i, j) for i, j in self.modified)
+        return all(self.validCell(i, j) for i, j in self.modified) and \
+            self.validDifEdges()
+
+    def checkMultipleRibs(self) -> bool:
+        """Проврека наличия кратных ребер с одинаковым весом. Если таковые
+        найдены, они заменяются на одно ненаправленное ребро"""
+        pass
 
     def get_last_row(self):
         """Метод, возвращающий индекс последней строки таблицы"""
@@ -221,15 +225,15 @@ class EdgeList(QWidget):
 
     def shiftModifies(self, idx) -> None:
         """Сдвигает строки в измененных данных при удалении строк в таблице"""
+        print(self.modified)
         [self.modified.pop((i, j), None) for i in idx for j in
          range(self.table.columnCount())]
         print(self.modified)
         new_mod = {}
         for i, j in self.modified:
             new_mod[i - self.calcShift(i, idx), j] = self.modified[i, j]
-        self.modified = new_mod
         print(self.modified)
-        print()
+        self.modified = new_mod
 
     def calcShift(self, row: int, idx: list[int]) -> int:
         """Считает смещение для строки таблицы"""
