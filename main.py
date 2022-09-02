@@ -6,6 +6,7 @@ from matplotlib import pyplot as plt
 
 from forms.add_new_data_form import AddNewData
 from forms.choose_graph import ChooseGraphForm
+from forms.add_from_csv import AddFromCsv
 from forms.tree_element import TreeItem
 from forms.edge_list import EdgeList
 from forms.matrix import GraphMatrix
@@ -55,6 +56,7 @@ class Mentor(QMainWindow):
         self.actionEdit_matrix.triggered.connect(self.openWindow)
         self.actionEdit_list.triggered.connect(self.openWindow)
         self.actionDraw.triggered.connect(self.draw_graph)
+        self.actionLoad_csv.triggered.connect(self.addCsv)
         # Остальные события
 
     def openWindow(self) -> None:
@@ -172,6 +174,12 @@ class Mentor(QMainWindow):
         p = ImageQt(self.image)
         # Устанавливаем в метку изображение
         self.canvas.setPixmap(QPixmap.fromImage(p))
+
+    def addCsv(self) -> None:
+        """Метод для добавления данных в граф из csv-таблицы"""
+        form = AddFromCsv()
+        if form.exec():
+            print('aaa')
 
     def closeEvent(self, event: QCloseEvent) -> None:
         """Обработка закрытия программы"""
