@@ -135,17 +135,17 @@ class EdgeList(QWidget):
 
     def deleteRow(self) -> None:
         """Метод для удаления ребра из таблицы"""
-        idx = {i.row() for i in self.table.selectedIndexes()}
+        idx = sorted({i.row() for i in self.table.selectedIndexes()},
+                     reverse=True)
         if not idx:
             return
         flag = QMessageBox.question(
             self, "Delete ribs",
             f"{ARE_YOU_SURE} selected ribs"
         )
-        print(idx)
         if flag == QMessageBox.No:
             return
-        [self.table.removeRow(i) for i in sorted(idx, reverse=True)]
+        [self.table.removeRow(i) for i in idx]
         self.shiftModifies(idx)
         self.deleteEdges(idx)
 
@@ -192,11 +192,6 @@ class EdgeList(QWidget):
         return all(self.validCell(i, j) for i, j in self.modified) and \
             self.validDifEdges()
 
-    def checkMultipleRibs(self) -> bool:
-        """Проврека наличия кратных ребер с одинаковым весом. Если таковые
-        найдены, они заменяются на одно ненаправленное ребро"""
-        pass
-
     def get_last_row(self):
         """Метод, возвращающий индекс последней строки таблицы"""
         return self.table.rowCount() - 1
@@ -225,14 +220,11 @@ class EdgeList(QWidget):
 
     def shiftModifies(self, idx) -> None:
         """Сдвигает строки в измененных данных при удалении строк в таблице"""
-        print(self.modified)
         [self.modified.pop((i, j), None) for i in idx for j in
          range(self.table.columnCount())]
-        print(self.modified)
         new_mod = {}
         for i, j in self.modified:
             new_mod[i - self.calcShift(i, idx), j] = self.modified[i, j]
-        print(self.modified)
         self.modified = new_mod
 
     def calcShift(self, row: int, idx: list[int]) -> int:
