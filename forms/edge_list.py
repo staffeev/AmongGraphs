@@ -230,3 +230,8 @@ class EdgeList(QWidget):
     def calcShift(self, row: int, idx: list[int]) -> int:
         """Считает смещение для строки таблицы"""
         return sum([1 for i in idx if i < row])
+
+    def setModified(self, val_dict: dict) -> None:
+        """Устновка нового словаря изменений"""
+        self.modified = val_dict
+        self.new_ribs = len(val_dict) // self.table.columnCount()

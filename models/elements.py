@@ -118,7 +118,7 @@ class Rib(SqlAlchemyBase):
         self.update_graph_collection()
 
     def __str__(self):
-        return f"{str(self.nodes[0])}-{str(self.nodes[1])}"
+        return f"{self.nodes[0].name}-{self.nodes[1].name}"
 
     def __repr__(self):
         return f"Rib({str(self)}; {self.weight})"

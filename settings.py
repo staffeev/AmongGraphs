@@ -22,7 +22,7 @@ ENTER_GRAPH = "Enter name for graph:"
 NOT_CHOSEN_TYPE = "You have not chosen input data type"
 NOT_CHOSEN_DEL = "You have not chosen delimiter"
 NOT_CHOSEN_FILE = "You have not chosen file to open"
-ALERT_CSV = "Attention! If you add data from the table and any graph is opened, all previous data will be deleted. If the data has errors, the corresponding one will not be added"
+ALERT_CSV = "Attention! If you add data from the table and any graph is opened, all previous data will be deleted. If the data has errors, the corresponding one will not be added. Do you want to accept the changes?"
 # Некоторые коды
 CHDIR = 'chdir'  # флаг для изменения направления ребра
 NWGHT = 'nwght'
