@@ -8,9 +8,10 @@ from settings import DEFAULT_DIST, ZOOM_STEP, RED, DARK_GRAY
 class Canvas(QWidget):
     """Класс холста для рисования графов"""
 
-    def __init__(self, rows=15, cols=25):
+    def __init__(self, rows=50, cols=50, parent=None):
         super().__init__()
         self.qp = QPainter()
+        self.prnt = parent
         self.rows = rows
         self.cols = cols
         self.grid = [[0 for _ in range(cols)] for _ in range(rows)]
@@ -18,6 +19,7 @@ class Canvas(QWidget):
         self.dist = DEFAULT_DIST * self.zoom
         self.setGeometry(300, 300, self.dist * cols, self.dist * rows)
         self.move_canvas = False
+        self.can_move = True
         self.dif_x = self.dif_y = 0
         self.x = self.y = 0
 
@@ -116,6 +118,10 @@ class Canvas(QWidget):
             self.y = event.y() + self.dif_y
             self.checkBorders()
             self.repaint()
+
+    def resizeEvent(self, event) -> None:
+        """Проверка границы при изменении размера виджета"""
+        self.checkBorders()
 
 
 if __name__ == '__main__':

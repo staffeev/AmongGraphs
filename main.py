@@ -38,6 +38,7 @@ class Mentor(QMainWindow):
         self.graph_name = None
         self.window = None
         self.image = None
+        self.canvas = Canvas()
         self.initUI()
 
     def initUI(self) -> None:
@@ -46,7 +47,7 @@ class Mentor(QMainWindow):
         self.rootNode = self.treeModel.invisibleRootItem()
         self.graph_list.setModel(self.treeModel)
         # Настройка относительного позиционирования элементов главного окна
-        self.splitter.addWidget(Canvas())
+        self.splitter.addWidget(self.canvas)
         self.splitter.setSizes([100, 700])
         self.widget.setLayout(self.hl)
         self.setCentralWidget(self.widget)
