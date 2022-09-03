@@ -183,7 +183,7 @@ class EdgeList(QWidget):
         self.modified = {}
         self.new_ribs = 0
         self.parent.showTreeOfElements()
-        self.parent.draw_graph()
+        self.parent.canvas.repaint()
 
     def checkComplete(self) -> bool:
         """Метод проверки корректности измененных данных"""

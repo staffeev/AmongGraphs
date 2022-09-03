@@ -38,15 +38,18 @@ class Vertex(SqlAlchemyBase):
     graph_id = Column(Integer, ForeignKey('graphs.id'))
     ribs = relation("Rib", secondary="vertex_to_rib",
                     back_populates="nodes", cascade="all, delete")
+    row = Column(Integer, default=0)  # Адрес в сетке холста
+    col = Column(Integer, default=0)
 
-    def __init__(self):
-        self.cell = (None, None)  # Ячейка в сетке холста
+    @property
+    def cell(self):
+        return self.row, self.col
 
     def set_random_cell(self) -> None:
         """Установка вершины в случайную клетку холста"""
         cells = self.graph.get_occupied_cells()
         free_cells = set(product(range(MAX_CANVAS_SIZE), repeat=2)) - cells
-        self.cell = choice(free_cells)
+        self.row, self.col = choice(list(free_cells))
 
     def rename(self, name: str) -> None:
         """Метод для переименования вершины"""
@@ -190,7 +193,7 @@ class Graph(SqlAlchemyBase):
             if vert in self.nodes:
                 continue
             self.nodes.append(vert)
-            vert.set_random_cell()
+            self.nodes[-1].set_random_cell()
         # [self.nodes.append(vert) for vert in vertexes if vert not in self.nodes]
 
     def add_ribs(self, *ribs: Rib) -> None:

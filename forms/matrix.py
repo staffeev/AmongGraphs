@@ -202,7 +202,8 @@ class GraphMatrix(QWidget):
                 continue
             self.processRib(i, j)
         self.modified = {}
-        self.parent.draw_graph()
+        self.parent.showTreeOfElements()
+        self.parent.canvas.repaint()
 
     def processRib(self, row: int, col: int) -> None:
         """Метод, обрабаотывающий измененное ребро"""
