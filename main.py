@@ -202,6 +202,11 @@ class Mentor(QMainWindow):
             edge_list = EdgeList(self.graph_name, self)
             edge_list.setModified(form.modified)
             edge_list.save()
+        elif form.dataType == 'matrix':
+            matrix = GraphMatrix(self.graph_name, self)
+            matrix.addCoupleNodes(form.data.get('nodes', []))
+            matrix.setModified(form.modified)
+            matrix.save()
 
     def reloadGraph(self) -> None:
         """Если граф существует, его данные будут удалены.

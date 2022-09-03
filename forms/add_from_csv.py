@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QDialog, QMessageBox, QFileDialog, \
     QDialogButtonBox
 from PyQt5 import uic
 from settings import NOT_CHOSEN_FILE, NOT_CHOSEN_TYPE, NOT_CHOSEN_DEL, ALERT_CSV
-from csv import DictReader
+from csv import DictReader, reader
 from collections import OrderedDict
 
 
@@ -56,14 +56,43 @@ class AddFromCsv(QDialog):
         self.file = file
 
     def unpackValuesFromList(self) -> None:
-        """Распаковка данных из списка-таблицы"""
+        """Распаковка данных из списка в таблице"""
         self.data = OrderedDict()
         with open(self.file) as file:
             read = DictReader(file, delimiter=self.delimiter, quotechar='"')
-            [self.unpackEdge(el) for el in read]
-        self.createModified()
+            [self.unpackEdgeFromList(el) for el in read]
+        self.createModifiedList()
 
-    def unpackEdge(self, el) -> None:
+    def unpackValuesFromMatrix(self) -> None:
+        """Распаковка данных из матрицы в таблице"""
+        self.data = {}
+        with open(self.file) as file:
+            read = reader(file, delimiter=self.delimiter, quotechar='"')
+            if not self.unpackNodes(next(read)):
+                return
+            self.data['ribs'] = [i[1:] for i in list(read)]
+            for i, row in enumerate(self.data['ribs']):
+                for j, col in enumerate(row):
+                    self.unpackEdgeFromMatrix(i, j)
+
+    def unpackNodes(self, names) -> bool:
+        """Распаковка вершин"""
+        nodes = names[1:]
+        if len(nodes) != len(set(nodes)):
+            return False
+        self.data['nodes'] = nodes
+        return True
+
+    def unpackEdgeFromMatrix(self, row: int, col: int) -> None:
+        """Распаковка ребра из матрицы"""
+        if row == col or not self.data['ribs'][row][col]:
+            return
+        try:
+            self.modified[row, col] = float(self.data['ribs'][row][col])
+        except ValueError:
+            return
+
+    def unpackEdgeFromList(self, el: dict) -> None:
         """Распаковка данных одного ребра"""
         try:
             n1, n2 = el['start'], el['end']
@@ -71,7 +100,7 @@ class AddFromCsv(QDialog):
                 raise ValueError
             if n1 == n2:
                 raise KeyError
-            w, is_d = int(el['weight']), bool(int(el['is_directed']))
+            w, is_d = float(el['weight']), bool(int(el['is_directed']))
             self.data[n1, n2] = (w, is_d)
         except (KeyError, ValueError, TypeError):
             return
@@ -80,10 +109,13 @@ class AddFromCsv(QDialog):
         """Проверка входных данных"""
         if not self.validParameters():
             return
-        self.unpackValuesFromList()
         qst = QMessageBox.question(self, "Accept changes", ALERT_CSV)
         if qst == QMessageBox.No:
             return
+        if self.dataType == 'list':
+            self.unpackValuesFromList()
+        elif self.dataType == 'matrix':
+            self.unpackValuesFromMatrix()
         self.done(1)
         # TODO
         pass
@@ -101,7 +133,7 @@ class AddFromCsv(QDialog):
             return False
         return True
 
-    def createModified(self) -> None:
+    def createModifiedList(self) -> None:
         """Создание словаря изменений в графе"""
         self.modified = {}
         for i, el in enumerate(self.data):
@@ -109,8 +141,4 @@ class AddFromCsv(QDialog):
             self.modified[i, 1] = el[1]
             self.modified[i, 2] = self.data[el][0]
             self.modified[i, 3] = self.data[el][1]
-        print(self.modified)
-        # TODO
-        pass
-
 
