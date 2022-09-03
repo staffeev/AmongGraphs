@@ -6,6 +6,7 @@ from matplotlib import pyplot as plt
 
 from forms.add_new_data_form import AddNewData
 from forms.choose_graph import ChooseGraphForm
+from forms.add_from_csv import AddFromCsv
 from forms.tree_element import TreeItem
 from forms.edge_list import EdgeList
 from forms.matrix import GraphMatrix
@@ -19,6 +20,7 @@ from PyQt5.QtGui import QPixmap
 from models import db_session
 from settings import NOT_OPEN, ENTER_GRAPH
 import io
+from typing import Union
 from PIL import Image
 
 
@@ -55,6 +57,7 @@ class Mentor(QMainWindow):
         self.actionEdit_matrix.triggered.connect(self.openWindow)
         self.actionEdit_list.triggered.connect(self.openWindow)
         self.actionDraw.triggered.connect(self.draw_graph)
+        self.actionLoad_csv.triggered.connect(self.addCsv)
         # Остальные события
 
     def openWindow(self) -> None:
@@ -62,47 +65,65 @@ class Mentor(QMainWindow):
         if self.graph_name is None:
             QMessageBox.warning(self, "Open graph", NOT_OPEN)
             return
+        if self.window is not None:
+            self.window.close()
         if self.sender() == self.actionEdit_list:
             self.window = EdgeList(self.graph_name, self)
         elif self.sender() == self.actionEdit_matrix:
             self.window = GraphMatrix(self.graph_name, self)
         self.window.show()
 
-    def createGraph(self) -> None:
+    def createGraph(self, name=None) -> Union[str, None]:
         """Метод для создания графа"""
         session = db_session.create_session()
-        form = AddNewData(get_graph_names(session), ENTER_GRAPH, self)
-        if form.exec():  # Создание графа
+        if name is not None and name:
+            graph = Graph(name=name)
+        else:
+            form = AddNewData(get_graph_names(session), ENTER_GRAPH, self)
+            if not form.exec():
+                session.close()
+                return
             graph = Graph(name=form.inputData.text())
-            session.add(graph)
-            session.commit()
+        session.add(graph)
+        session.commit()
         session.close()
+        return name if name is not None else form.inputData.text()
 
-    def openGraph(self) -> None:
+    def openGraph(self, name=None) -> None:
         """Метод для открытия графа"""
         session = db_session.create_session()
-        form = ChooseGraphForm(get_graph_names(session), False, self)
-        if form.exec():  # Открытие графа
+        if name is not None and name:
+            graph = session.query(Graph).filter(Graph.name == name).first()
+        else:
+            form = ChooseGraphForm(get_graph_names(session), False, self)
+            if not form.exec():
+                session.close()
+                return
             graph = session.query(Graph).filter(
                 Graph.name == form.name_to_return
             ).first()
-            self.graph_name = graph.name
-            self.showTreeOfElements()
+        self.graph_name = graph.name
+        self.showTreeOfElements()
         session.close()
 
-    def deleteGraph(self) -> None:
+    def deleteGraph(self, name=None) -> None:
         """Метод для удаления графа"""
         session = db_session.create_session()
-        form = ChooseGraphForm(get_graph_names(session), True, self)
-        if form.exec():  # Удаление графа
+        if name is not None and name:
+            graph = session.query(Graph).filter(Graph.name == name).first()
+        else:
+            form = ChooseGraphForm(get_graph_names(session), True, self)
+            if not form.exec():
+                session.close()
+                return
             graph = session.query(Graph).filter(
                 Graph.name == form.name_to_return
             ).first()
-            session.delete(graph)
-            session.commit()
-            self.clearTree()
-            if self.window is not None:
-                self.window.close()
+        session.delete(graph)
+        session.commit()
+        self.clearTree()
+        if self.window is not None:
+            self.window.close()
         session.close()
 
     def saveChanges(self) -> None:
@@ -170,6 +191,35 @@ class Mentor(QMainWindow):
         p = ImageQt(self.image)
         # Устанавливаем в метку изображение
         self.canvas.setPixmap(QPixmap.fromImage(p))
+
+    def addCsv(self) -> None:
+        """Метод для добавления данных в граф из csv-таблицы"""
+        form = AddFromCsv()
+        if not form.exec():
+            return
+        self.reloadGraph()
+        if form.dataType == 'list':
+            edge_list = EdgeList(self.graph_name, self)
+            edge_list.setModified(form.modified)
+            edge_list.save()
+        elif form.dataType == 'matrix':
+            matrix = GraphMatrix(self.graph_name, self)
+            matrix.addCoupleNodes(form.data.get('nodes', []))
+            matrix.setModified(form.modified)
+            matrix.save()
+
+    def reloadGraph(self) -> None:
+        """Если граф существует, его данные будут удалены.
+        Иначе будет создан новый граф"""
+        if self.graph_name is not None:
+            name = self.graph_name
+            self.deleteGraph(name)
+            self.openGraph(name=self.createGraph(name))
+        else:
+            name = self.createGraph()
+            if name is None:
+                return
+            self.openGraph(name=name)
 
     def closeEvent(self, event: QCloseEvent) -> None:
         """Обработка закрытия программы"""

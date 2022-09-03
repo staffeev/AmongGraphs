@@ -154,11 +154,24 @@ class GraphMatrix(QWidget):
         self.expandTable()
         self.updateTableForm()
 
-    def expandTable(self) -> None:
+    def addCoupleNodes(self, names) -> None:
+        """Добавления нескольких вершин в граф"""
+        session = db_session.create_session()
+        graph = get_graph_by_name(session, self.graph_name)
+        nodes = [Vertex(name=i) for i in names]
+        graph.add_nodes(*nodes)
+        session.add_all(nodes)
+        session.commit()
+        session.close()
+        self.expandTable(len(nodes))
+        self.updateTableForm()
+
+    def expandTable(self, cnt=1) -> None:
         """Метод, расширяющий матрицу на одну строку и один столбец"""
-        cols = self.get_cols()
-        self.matrix.insertRow(cols)
-        self.matrix.insertColumn(cols)
+        for _ in range(cnt):
+            cols = self.get_cols()
+            self.matrix.insertRow(cols)
+            self.matrix.insertColumn(cols)
 
     def deleteNode(self) -> None:
         """Метод для удаления вершины из графа"""
@@ -251,3 +264,9 @@ class GraphMatrix(QWidget):
         if item is None:
             return None
         return item.text()
+
+    def setModified(self, val_dict: dict) -> None:
+        """Учстановка нового словаря изменений"""
+        for i, j in val_dict:
+            self.matrix.setItem(i, j, QItem(str(val_dict[i, j])))
+        self.modified = val_dict
