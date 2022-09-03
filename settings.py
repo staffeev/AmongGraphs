@@ -28,5 +28,7 @@ CHDIR = 'chdir'  # флаг для изменения направления р�
 NWGHT = 'nwght'
 NTET = 'not_edit_value'
 # Для рисования
-MIN_ZOOM = 0.001
-MAX_ZOOM = 32
+DEFAULT_DIST = 20
+ZOOM_STEP = 1.5
+MIN_ZOOM = 0.01
+MAX_ZOOM = ZOOM_STEP ** 8
