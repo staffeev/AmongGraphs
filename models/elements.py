@@ -5,6 +5,9 @@ from sqlalchemy.orm.collections import attribute_mapped_collection
 from .db_session import SqlAlchemyBase
 from math import inf
 from typing import Union
+from itertools import product
+from settings import MAX_CANVAS_SIZE
+from random import choice
 
 
 association_table = sqlalchemy.Table(
@@ -35,6 +38,15 @@ class Vertex(SqlAlchemyBase):
     graph_id = Column(Integer, ForeignKey('graphs.id'))
     ribs = relation("Rib", secondary="vertex_to_rib",
                     back_populates="nodes", cascade="all, delete")
+
+    def __init__(self):
+        self.cell = (None, None)  # Ячейка в сетке холста
+
+    def set_random_cell(self) -> None:
+        """Установка вершины в случайную клетку холста"""
+        cells = self.graph.get_occupied_cells()
+        free_cells = set(product(range(MAX_CANVAS_SIZE), repeat=2)) - cells
+        self.cell = choice(free_cells)
 
     def rename(self, name: str) -> None:
         """Метод для переименования вершины"""
@@ -174,7 +186,12 @@ class Graph(SqlAlchemyBase):
 
     def add_nodes(self, *vertexes: Vertex) -> None:
         """Метод добавления вершин в граф"""
-        [self.nodes.append(vert) for vert in vertexes if vert not in self.nodes]
+        for vert in vertexes:
+            if vert in self.nodes:
+                continue
+            self.nodes.append(vert)
+            vert.set_random_cell()
+        # [self.nodes.append(vert) for vert in vertexes if vert not in self.nodes]
 
     def add_ribs(self, *ribs: Rib) -> None:
         """Метод добавления ребер в граф"""
@@ -218,3 +235,7 @@ class Graph(SqlAlchemyBase):
     def get_ordered_ribs(self) -> list[Rib]:
         """Метод, возвращающий список ребер, сортированнных по id"""
         return sorted(self.ribs.values(), key=lambda x: x.id)
+
+    def get_occupied_cells(self) -> set[tuple[int, int]]:
+        """Возвращает список занятых в холсте клеток"""
+        return {i.cell for i in self.nodes}

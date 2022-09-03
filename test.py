@@ -1,5 +1,5 @@
 from csv import DictWriter, writer
-
+from itertools import product
 data_list = {
     ('A', 'B'): (10, 0),
     ('B', 'C'): (15, 1),
@@ -35,4 +35,4 @@ data_matrix = [
 #     wr = writer(f, delimiter=';')
 #     wr.writerows(data_matrix)
 
-print(float(10.0))
+print(set(product(range(10), repeat=2)))

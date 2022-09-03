@@ -1,27 +1,31 @@
 import sys
-from PyQt5.QtWidgets import QWidget, QApplication
+from PyQt5.QtWidgets import QWidget, QApplication, QMenu
 from PyQt5.QtGui import QPainter
 from PyQt5.QtCore import Qt
-from settings import DEFAULT_DIST, ZOOM_STEP, RED, DARK_GRAY
+from settings import DEFAULT_DIST, ZOOM_STEP, RED, DARK_GRAY, MIN_ZOOM, \
+    MAX_ZOOM, MAX_CANVAS_SIZE
 
 
 class Canvas(QWidget):
     """Класс холста для рисования графов"""
 
-    def __init__(self, rows=50, cols=50, parent=None):
+    def __init__(self, rows=MAX_CANVAS_SIZE, cols=MAX_CANVAS_SIZE, graph=None, parent=None):
         super().__init__()
         self.qp = QPainter()
+        self.graph_name = graph
         self.prnt = parent
         self.rows = rows
         self.cols = cols
-        self.grid = [[0 for _ in range(cols)] for _ in range(rows)]
+        self.grid = [[None for _ in range(cols)] for _ in range(rows)]
         self.zoom = 1
         self.dist = DEFAULT_DIST * self.zoom
-        self.setGeometry(300, 300, self.dist * cols, self.dist * rows)
         self.move_canvas = False
         self.can_move = True
         self.dif_x = self.dif_y = 0
         self.x = self.y = 0
+        self.selectedElement = None
+        self.last_cell = None
+        self.repaint()
 
     def paintEvent(self, event) -> None:
         """Событие отрисовки графа"""
@@ -87,9 +91,9 @@ class Canvas(QWidget):
     def wheelEvent(self, event) -> None:
         """Изменение масштаба холста посредством кручения колеса мыши"""
         if event.angleDelta().y() > 0:
-            self.zoom = min(self.zoom * ZOOM_STEP, 32)
+            self.zoom = min(self.zoom * ZOOM_STEP, MAX_ZOOM)
         else:
-            self.zoom = max(self.zoom / ZOOM_STEP, 0.1)
+            self.zoom = max(self.zoom / ZOOM_STEP, MIN_ZOOM)
         self.calcDist()
         self.checkBorders()
         self.repaint()
@@ -122,6 +126,41 @@ class Canvas(QWidget):
     def resizeEvent(self, event) -> None:
         """Проверка границы при изменении размера виджета"""
         self.checkBorders()
+
+    def contextMenuEvent(self, event) -> None:
+        """Открытие контекстного меню"""
+        row, col = self.getCell(event.x(), event.y())
+        self.last_cell = row, col
+        if not (0 <= row < self.rows) or not (0 <= col < self.cols):
+            return
+        menu = QMenu(self)
+        if not self.grid[row][col]:
+            menu.addAction('Add node', self.addNode)
+        else:
+            menu.addAction('Delete node', self.deleteNode)
+        menu.exec_(self.mapToGlobal(event.pos()))
+        # TODO
+
+    def getCell(self, x: int, y: int) -> tuple[int, int]:
+        """Возвращает индекс клетки в сетке по координатам"""
+        return int((y - self.y) // self.dist), int((x - self.x) // self.dist)
+
+    def addNode(self) -> None:
+        """Метод для добавления вершины на холст"""
+        # TODO
+        row, col = self.last_cell
+        self.grid[row][col] = 1
+        self.repaint()
+
+    def deleteNode(self) -> None:
+        """Метод для удаления вершины с холста"""
+        # TODO
+        row, col = self.last_cell
+        self.grid[row][col] = 0
+        self.repaint()
+        pass
+
+
 
 
 if __name__ == '__main__':

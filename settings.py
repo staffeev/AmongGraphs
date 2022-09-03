@@ -26,10 +26,11 @@ NOT_CHOSEN_FILE = "You have not chosen file to open"
 ALERT_CSV = "Attention! If you add data from the table and any graph is opened, all previous data will be deleted. If the data has errors, the corresponding one will not be added. Do you want to accept the changes?"
 # Некоторые коды
 CHDIR = 'chdir'  # флаг для изменения направления ребра
-NWGHT = 'nwght'
-NTET = 'not_edit_value'
+NWGHT = 'nwght'  # флаг для изменения веса ребра
+NTET = 'not_edit_value'  # флаг, делающий элемент недоступным для учета в изменениях
 # Для рисования
+MAX_CANVAS_SIZE = 25
 DEFAULT_DIST = 20
 ZOOM_STEP = 1.5
-MIN_ZOOM = 0.02
-MAX_ZOOM = ZOOM_STEP ** 7
+MIN_ZOOM = 0.5
+MAX_ZOOM = ZOOM_STEP ** 6

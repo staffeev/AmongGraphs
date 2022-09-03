@@ -16,7 +16,7 @@ from functions import get_graph_names, create_ribs, get_graph_by_name
 from PyQt5.Qt import QStandardItemModel
 from PyQt5 import uic
 from PyQt5.QtGui import QCloseEvent
-from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox
+from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox, QWidget
 from PyQt5.QtGui import QPixmap
 from models import db_session
 from settings import NOT_OPEN, ENTER_GRAPH
@@ -124,7 +124,9 @@ class Mentor(QMainWindow):
             ).first()
         session.delete(graph)
         session.commit()
-        self.clearTree()
+        if graph.name == self.graph_name:
+            self.canvas = QWidget()
+            self.clearTree()
         if self.window is not None:
             self.window.close()
         session.close()
