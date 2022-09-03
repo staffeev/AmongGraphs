@@ -18,8 +18,7 @@ class Canvas(QWidget):
         self.setGeometry(300, 300, self.dist * cols, self.dist * rows)
         self.move_canvas = False
         self.dif_x = self.dif_y = 0
-        self.x = self.size().width() // 2
-        self.y = self.size().height() // 2
+        self.x = self.y = 0
 
     def paintEvent(self, event) -> None:
         """Событие отрисовки графа"""
@@ -33,20 +32,29 @@ class Canvas(QWidget):
         qp.setPen(BLACK)
         for i in range(self.rows + 1):
             qp.drawLine(self.x, self.y + i * self.dist,
-                        self.x + self.get_width(), self.y + i * self.dist)
+                        self.x + self.getWidth(), self.y + i * self.dist)
         for i in range(self.cols + 1):
             qp.drawLine(self.x + i * self.dist, self.y,
-                        self.x + i * self.dist, self.y + self.get_height())
+                        self.x + i * self.dist, self.y + self.getHeight())
 
-    def get_width(self) -> int:
-        """Возвращает ширину виджета"""
+    def checkBorders(self) -> None:
+        """Проверка на то, находится ли холст в границах виджета"""
+        self.x = max(self.x, 0)
+        self.y = max(self.y, 0)
+        if self.x + self.getWidth() > self.size().width():
+            self.x = self.size().width() - self.getWidth()
+        if self.y + self.getHeight() > self.size().height():
+            self.y = self.size().height() - self.getHeight()
+
+    def getWidth(self) -> int:
+        """Возвращает ширину холста"""
         return self.dist * self.cols
 
-    def get_height(self) -> int:
-        """Возвращает высоту виджета"""
+    def getHeight(self) -> int:
+        """Возвращает высоту холста"""
         return self.dist * self.rows
 
-    def calc_dist(self) -> None:
+    def calcDist(self) -> None:
         """Пересчёт расстояния между линиями сетки"""
         self.dist = DEFAULT_DIST * self.zoom
 
@@ -56,8 +64,8 @@ class Canvas(QWidget):
             self.zoom = min(self.zoom * ZOOM_STEP, 32)
         else:
             self.zoom = max(self.zoom / ZOOM_STEP, 0.1)
-
-        self.calc_dist()
+        self.calcDist()
+        self.checkBorders()
         self.repaint()
 
     def mousePressEvent(self, event) -> None:
@@ -77,6 +85,7 @@ class Canvas(QWidget):
         if self.move_canvas:
             self.x = event.x() + self.dif_x
             self.y = event.y() + self.dif_y
+            self.checkBorders()
             self.repaint()
 
 
