@@ -63,11 +63,6 @@
          <enum>Qt::Horizontal</enum>
         </property>
         <widget class="QTreeView" name="graph_list"/>
-        <widget class="QLabel" name="canvas">
-         <property name="text">
-          <string>TextLabel</string>
-         </property>
-        </widget>
        </widget>
       </item>
      </layout>

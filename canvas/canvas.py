@@ -1,15 +1,16 @@
 import sys
 from PyQt5.QtWidgets import QWidget, QApplication
-from PyQt5.QtGui import QPainter, QColor
+from PyQt5.QtGui import QPainter
 from PyQt5.QtCore import Qt
-from settings import BLACK, DEFAULT_DIST, ZOOM_STEP
+from settings import DEFAULT_DIST, ZOOM_STEP, RED, DARK_GRAY
 
 
 class Canvas(QWidget):
     """Класс холста для рисования графов"""
 
-    def __init__(self, rows, cols):
+    def __init__(self, rows=15, cols=25):
         super().__init__()
+        self.qp = QPainter()
         self.rows = rows
         self.cols = cols
         self.grid = [[0 for _ in range(cols)] for _ in range(rows)]
@@ -22,20 +23,39 @@ class Canvas(QWidget):
 
     def paintEvent(self, event) -> None:
         """Событие отрисовки графа"""
-        qp = QPainter()
-        qp.begin(self)
-        self.drawGrid(qp)
-        qp.end()
+        self.qp = QPainter()
+        self.qp.begin(self)
+        self.drawGrid()
+        self.drawElements()
+        self.qp.end()
 
-    def drawGrid(self, qp) -> None:
+    def drawElements(self) -> None:
+        """Отрисовка элементов графа"""
+
+        self.drawPoints()
+        # TODO
+
+    def drawPoints(self) -> None:
+        """Вызов отрисовки каждой вершины"""
+        for i, row in enumerate(self.grid):
+            for j, el in enumerate(row):
+                if el == 1:
+                    self.drawPoint(j, i)
+
+    def drawPoint(self, row: int, col: int) -> None:
+        """Метод для рисования вершины графа на клетчатом поле"""
+        self.qp.setBrush(RED)
+        self.qp.drawEllipse(*self.getPoint(row, col), self.dist, self.dist)
+
+    def drawGrid(self) -> None:
         """Отрисовка сетки"""
-        qp.setPen(BLACK)
+        self.qp.setPen(DARK_GRAY)
         for i in range(self.rows + 1):
-            qp.drawLine(self.x, self.y + i * self.dist,
-                        self.x + self.getWidth(), self.y + i * self.dist)
+            self.qp.drawLine(self.x, self.y + i * self.dist,
+                             self.x + self.getWidth(), self.y + i * self.dist)
         for i in range(self.cols + 1):
-            qp.drawLine(self.x + i * self.dist, self.y,
-                        self.x + i * self.dist, self.y + self.getHeight())
+            self.qp.drawLine(self.x + i * self.dist, self.y,
+                             self.x + i * self.dist, self.y + self.getHeight())
 
     def checkBorders(self) -> None:
         """Проверка на то, находится ли холст в границах виджета"""
@@ -54,17 +74,13 @@ class Canvas(QWidget):
         """Возвращает высоту холста"""
         return self.dist * self.rows
 
+    def getPoint(self, row: int, col: int) -> tuple[int, int]:
+        """Возвращает координаты ячейки клетчатого поля"""
+        return self.x + row * self.dist, self.y + col * self.dist
+
     def calcDist(self) -> None:
         """Пересчёт расстояния между линиями сетки"""
         self.dist = DEFAULT_DIST * self.zoom
-
-    def getLeftUpperCorner(self) -> tuple[int, int]:
-        """Возвращает координаты левого верхнего угла"""
-        return self.x, self.y
-
-    def getRightBottomCorner(self) -> tuple[int, int]:
-        """Возвращает координаты праого нижнегго угла"""
-        return self.x + self.getWidth(), self.y + self.getHeight()
 
     def wheelEvent(self, event) -> None:
         """Изменение масштаба холста посредством кручения колеса мыши"""
@@ -73,7 +89,6 @@ class Canvas(QWidget):
         else:
             self.zoom = max(self.zoom / ZOOM_STEP, 0.1)
         self.calcDist()
-        print(self.getLeftUpperCorner(), self.getRightBottomCorner())
         self.checkBorders()
         self.repaint()
 

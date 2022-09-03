@@ -4,6 +4,7 @@ import networkx as nx
 from PIL.ImageQt import ImageQt
 from matplotlib import pyplot as plt
 
+from canvas.canvas import Canvas
 from forms.add_new_data_form import AddNewData
 from forms.choose_graph import ChooseGraphForm
 from forms.add_from_csv import AddFromCsv
@@ -45,7 +46,8 @@ class Mentor(QMainWindow):
         self.rootNode = self.treeModel.invisibleRootItem()
         self.graph_list.setModel(self.treeModel)
         # Настройка относительного позиционирования элементов главного окна
-        self.splitter.setSizes([200, 600])
+        self.splitter.addWidget(Canvas())
+        self.splitter.setSizes([100, 700])
         self.widget.setLayout(self.hl)
         self.setCentralWidget(self.widget)
         # События меню
