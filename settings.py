@@ -30,5 +30,5 @@ NTET = 'not_edit_value'
 # Для рисования
 DEFAULT_DIST = 20
 ZOOM_STEP = 1.5
-MIN_ZOOM = 0.01
-MAX_ZOOM = ZOOM_STEP ** 8
+MIN_ZOOM = 0.02
+MAX_ZOOM = ZOOM_STEP ** 7

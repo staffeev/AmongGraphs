@@ -39,12 +39,12 @@ class Canvas(QWidget):
 
     def checkBorders(self) -> None:
         """Проверка на то, находится ли холст в границах виджета"""
-        self.x = max(self.x, 0)
-        self.y = max(self.y, 0)
-        if self.x + self.getWidth() > self.size().width():
-            self.x = self.size().width() - self.getWidth()
-        if self.y + self.getHeight() > self.size().height():
-            self.y = self.size().height() - self.getHeight()
+        if not self.canvasIsBiggerThanWidget():
+            self.x = min(max(self.x, 0), self.size().width() - self.getWidth())
+            self.y = min(max(self.y, 0), self.size().height() - self.getHeight())
+        else:
+            self.x = max(min(self.x, 0), self.size().width() - self.getWidth())
+            self.y = max(min(self.y, 0), self.size().height() - self.getHeight())
 
     def getWidth(self) -> int:
         """Возвращает ширину холста"""
@@ -58,6 +58,14 @@ class Canvas(QWidget):
         """Пересчёт расстояния между линиями сетки"""
         self.dist = DEFAULT_DIST * self.zoom
 
+    def getLeftUpperCorner(self) -> tuple[int, int]:
+        """Возвращает координаты левого верхнего угла"""
+        return self.x, self.y
+
+    def getRightBottomCorner(self) -> tuple[int, int]:
+        """Возвращает координаты праого нижнегго угла"""
+        return self.x + self.getWidth(), self.y + self.getHeight()
+
     def wheelEvent(self, event) -> None:
         """Изменение масштаба холста посредством кручения колеса мыши"""
         if event.angleDelta().y() > 0:
@@ -65,8 +73,14 @@ class Canvas(QWidget):
         else:
             self.zoom = max(self.zoom / ZOOM_STEP, 0.1)
         self.calcDist()
+        print(self.getLeftUpperCorner(), self.getRightBottomCorner())
         self.checkBorders()
         self.repaint()
+
+    def canvasIsBiggerThanWidget(self) -> bool:
+        """Возвращает истину, если холст больше своего виджета"""
+        return self.getWidth() > self.size().width() and \
+            self.getHeight() > self.size().height()
 
     def mousePressEvent(self, event) -> None:
         """Обработка нажатия кнопки мыши"""
