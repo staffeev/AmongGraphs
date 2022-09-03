@@ -27,3 +27,6 @@ ALERT_CSV = "Attention! If you add data from the table and any graph is opened, 
 CHDIR = 'chdir'  # флаг для изменения направления ребра
 NWGHT = 'nwght'
 NTET = 'not_edit_value'
+# Для рисования
+MIN_ZOOM = 0.001
+MAX_ZOOM = 32
