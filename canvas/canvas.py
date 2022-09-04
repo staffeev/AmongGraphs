@@ -23,8 +23,6 @@ class Canvas(QWidget):
         self.zoom = 1
         self.dist = DEFAULT_DIST * self.zoom
         self.move_canvas = False
-        self.can_move = True
-        self.do_paint = False
         self.dif_x = self.dif_y = 0
         self.x = self.y = 0
         self.graph_elements = []
@@ -36,12 +34,13 @@ class Canvas(QWidget):
         # TODO
         if name is None:
             return
+        self.graph_elements = []
         self.graph_name = name
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
         for node in graph.nodes:
             self.graph_elements.append(CanvasNode(node))
-            self.grid[node.row][node.col] = 1
+            self.grid[node.row][node.col] = node
         session.close()
 
     def paintEvent(self, event) -> None:
@@ -53,7 +52,6 @@ class Canvas(QWidget):
         self.drawGrid()
         self.drawElements()
         self.qp.end()
-        self.do_paint = False
 
     def drawElements(self) -> None:
         """Отрисовка элементов графа"""
@@ -65,16 +63,6 @@ class Canvas(QWidget):
         """Вызов отрисовки каждой вершины"""
         [el.draw(self.qp, self.getPoint(el.row, el.col), self.dist)
          for el in self.graph_elements]
-        # for i, row in enumerate(self.grid):
-        #     for j, el in enumerate(row):
-        #         if el is not None:
-        #             self.drawPoint(j, i)
-
-    # def drawPoint(self, row: int, col: int) -> None:
-    #     """Метод для рисования вершины графа на клетчатом поле"""
-    #
-    #     self.qp.setBrush(RED)
-    #     self.qp.drawEllipse(*self.getPoint(row, col), self.dist, self.dist)
 
     def drawGrid(self) -> None:
         """Отрисовка сетки"""
@@ -183,10 +171,6 @@ class Canvas(QWidget):
         self.grid[row][col] = 0
         self.parent()
         pass
-
-    def paint(self):
-        self.do_paint = True
-        self.repaint()
 
 
 if __name__ == '__main__':

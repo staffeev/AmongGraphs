@@ -183,6 +183,7 @@ class EdgeList(QWidget):
         self.modified = {}
         self.new_ribs = 0
         self.parent.showTreeOfElements()
+        self.parent.canvas.loadGraph(self.graph_name)
         self.parent.canvas.repaint()
 
     def checkComplete(self) -> bool:

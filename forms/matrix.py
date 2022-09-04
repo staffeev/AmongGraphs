@@ -203,6 +203,7 @@ class GraphMatrix(QWidget):
             self.processRib(i, j)
         self.modified = {}
         self.parent.showTreeOfElements()
+        self.parent.canvas.loadGraph(self.graph_name)
         self.parent.canvas.repaint()
 
     def processRib(self, row: int, col: int) -> None:

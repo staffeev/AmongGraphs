@@ -26,4 +26,8 @@ class CanvasNode:
         qp.drawEllipse(*p, dist, dist)
         qp.drawText(*p, dist, dist, Qt.AlignCenter, self.node_name)
 
+    def checkCollide(self) -> None:
+        # TODO
+        pass
+
 
