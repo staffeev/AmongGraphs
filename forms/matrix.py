@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QWidget, QHeaderView, QMessageBox, \
     QTableWidgetItem as QItem
 from PyQt5 import uic
 from PyQt5.QtCore import Qt
-from functions import str_is_float, get_graph_by_name, create_ribs
+from functions import str_is_float, get_graph_by_name, create_ribs, add_node
 from settings import ARE_YOU_SURE, ENTER_NODE, GRAY, NOT_NUMBER, NTET
 from forms.add_new_data_form import AddNewData
 from models import db_session
@@ -140,17 +140,7 @@ class GraphMatrix(QWidget):
 
     def addNode(self) -> None:
         """Метод для добавления вершины в граф"""
-        session = db_session.create_session()
-        graph = get_graph_by_name(session, self.graph_name)
-        form = AddNewData(graph.get_nodes(), ENTER_NODE)
-        if not form.exec():
-            session.close()
-            return
-        v = Vertex(name=form.inputData.text())
-        graph.add_nodes(v)
-        session.add(v)
-        session.commit()
-        session.close()
+        add_node(self.graph_name)
         self.expandTable()
         self.updateTableForm()
 

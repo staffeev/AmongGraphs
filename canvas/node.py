@@ -30,4 +30,8 @@ class CanvasNode:
         # TODO
         pass
 
+    def select(self) -> None:
+        # TODO
+        pass
+
 

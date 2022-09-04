@@ -149,7 +149,8 @@ class Canvas(QWidget):
         if not self.grid[row][col]:
             menu.addAction('Add node', self.addNode)
         else:
-            menu.addAction('Delete node', self.deleteNode)
+            menu.addAction('Rename', self.renameNode)
+            menu.addAction('Delete', self.deleteNode)
         menu.exec_(self.mapToGlobal(event.pos()))
         # TODO
 
@@ -170,6 +171,10 @@ class Canvas(QWidget):
         row, col = self.last_cell
         self.grid[row][col] = 0
         self.parent()
+        pass
+
+    def renameNode(self) -> None:
+        # TODO
         pass
 
 

@@ -1,5 +1,8 @@
-from models.elements import Graph
+from models.elements import Graph, Vertex
+from models import db_session
+from forms.add_new_data_form import AddNewData
 from sqlalchemy.orm import Session
+from settings import ENTER_NODE
 
 
 def str_is_float(s: str) -> bool:
@@ -29,6 +32,21 @@ def create_ribs(graph: Graph) -> dict:
         if not rib.is_directed:
             ribs[rib.nodes[1].name, rib.nodes[0].name] = rib.weight
     return ribs
+
+
+def add_node(graph_name: str) -> None:
+    """Функция для создания новой вершины в графе"""
+    session = db_session.create_session()
+    graph = get_graph_by_name(session, graph_name)
+    form = AddNewData(graph.get_nodes(), ENTER_NODE)
+    if not form.exec():
+        session.close()
+        return
+    v = Vertex(name=form.inputData.text())
+    graph.add_nodes(v)
+    session.add(v)
+    session.commit()
+    session.close()
 
 
 def create_matrix(graph: Graph) -> list[list]:
