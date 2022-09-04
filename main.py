@@ -59,7 +59,7 @@ class Mentor(QMainWindow):
         self.actionExit.triggered.connect(self.close)
         self.actionEdit_matrix.triggered.connect(self.openWindow)
         self.actionEdit_list.triggered.connect(self.openWindow)
-        self.actionDraw.triggered.connect(self.canvas.paint)
+        self.actionDraw.triggered.connect(self.canvas.repaint)
         self.actionLoad_csv.triggered.connect(self.addCsv)
         # Остальные события
 
@@ -155,47 +155,6 @@ class Mentor(QMainWindow):
         """Метод очистки дерева элементов графа"""
         self.treeModel.clear()
         self.rootNode = self.treeModel.invisibleRootItem()
-
-    # def create_graph(self):
-    #     """Функция, создающая граф на основе списка ребер"""
-    #     # Получаем списки ребер графа
-    #     session = db_session.create_session()
-    #     graph = get_graph_by_name(session, self.graph_name)
-    #     ribs = create_ribs(graph)
-    #     plt.clf()
-    #     fig_graph = nx.DiGraph()  # Создаем ориентированный граф
-    #     fig_graph.add_edges_from(ribs)  # Добавляем в граф ребра
-    #     nodes = [i.name for i in graph.nodes]
-    #     pos = nx.spring_layout(fig_graph)  # Создаем слой, на котором
-    #     # будут располагаться ребра и их веса
-    #     plt.figure(2, figsize=(
-    #         self.canvas.size().width() // 100,
-    #         self.canvas.size().height() // 100))
-    #     # Рисование весов ребер
-    #     nx.draw_networkx_edge_labels(fig_graph, pos, edge_labels=ribs,
-    #                                  font_size=7)
-    #     # Рисование ребер и вершин
-    #     nx.draw(fig_graph, pos, nodelist=nodes, node_size=175,
-    #             with_labels=True)
-    #
-    # def plt_figure_to_pil_image(self, fig):
-    #     """Функция принимает фигуру в pyplot и конвертирует
-    #     ее в объект Image"""
-    #     buf = io.BytesIO()  # Создание потока байтов
-    #     fig.savefig(buf)  # Сохранение фигуры как потока байтов
-    #     self.image = Image.open(buf)  # Создание изображение PIL
-    #     self.image.resize((self.canvas.size().width(), self.canvas.size().height()))
-    #
-    # def draw_graph(self):
-    #     """Функиця для рисования графа в окне приложения"""
-    #     if self.graph_name is None:
-    #         QMessageBox.warning(self, "Open graph", NOT_OPEN)
-    #         return
-    #     self.create_graph()
-    #     self.plt_figure_to_pil_image(plt)
-    #     p = ImageQt(self.image)
-    #     # Устанавливаем в метку изображение
-    #     self.canvas.setPixmap(QPixmap.fromImage(p))
 
     def addCsv(self) -> None:
         """Метод для добавления данных в граф из csv-таблицы"""

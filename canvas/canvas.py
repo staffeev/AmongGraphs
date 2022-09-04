@@ -6,6 +6,7 @@ from settings import DEFAULT_DIST, ZOOM_STEP, RED, DARK_GRAY, MIN_ZOOM, \
     MAX_ZOOM, MAX_CANVAS_SIZE
 from models import db_session
 from functions import get_graph_by_name
+from canvas.node import CanvasNode
 
 
 class Canvas(QWidget):
@@ -26,6 +27,7 @@ class Canvas(QWidget):
         self.do_paint = False
         self.dif_x = self.dif_y = 0
         self.x = self.y = 0
+        self.graph_elements = []
         self.selectedElement = None
         self.last_cell = None
 
@@ -38,12 +40,12 @@ class Canvas(QWidget):
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
         for node in graph.nodes:
-            self.grid[node.cell[0]][node.cell[1]] = node
+            self.graph_elements.append(CanvasNode(node))
+            self.grid[node.row][node.col] = 1
         session.close()
 
     def paintEvent(self, event) -> None:
         """Событие отрисовки графа"""
-        print(self.graph_name)
         if self.graph_name is None:
             return
         self.qp = QPainter()
@@ -61,15 +63,18 @@ class Canvas(QWidget):
 
     def drawPoints(self) -> None:
         """Вызов отрисовки каждой вершины"""
-        for i, row in enumerate(self.grid):
-            for j, el in enumerate(row):
-                if el is not None:
-                    self.drawPoint(j, i)
+        [el.draw(self.qp, self.getPoint(el.row, el.col), self.dist)
+         for el in self.graph_elements]
+        # for i, row in enumerate(self.grid):
+        #     for j, el in enumerate(row):
+        #         if el is not None:
+        #             self.drawPoint(j, i)
 
-    def drawPoint(self, row: int, col: int) -> None:
-        """Метод для рисования вершины графа на клетчатом поле"""
-        self.qp.setBrush(RED)
-        self.qp.drawEllipse(*self.getPoint(row, col), self.dist, self.dist)
+    # def drawPoint(self, row: int, col: int) -> None:
+    #     """Метод для рисования вершины графа на клетчатом поле"""
+    #
+    #     self.qp.setBrush(RED)
+    #     self.qp.drawEllipse(*self.getPoint(row, col), self.dist, self.dist)
 
     def drawGrid(self) -> None:
         """Отрисовка сетки"""
@@ -114,7 +119,7 @@ class Canvas(QWidget):
             self.zoom = max(self.zoom / ZOOM_STEP, MIN_ZOOM)
         self.calcDist()
         self.checkBorders()
-        self.paint()
+        self.repaint()
 
     def canvasIsBiggerThanWidget(self) -> bool:
         """Возвращает истину, если холст больше своего виджета"""
@@ -139,21 +144,18 @@ class Canvas(QWidget):
             self.x = event.x() + self.dif_x
             self.y = event.y() + self.dif_y
             self.checkBorders()
-            self.paint()
+            self.repaint()
 
     def resizeEvent(self, event) -> None:
         """Проверка границы при изменении размера виджета"""
         self.checkBorders()
-        self.paint()
-
-    def focusOutEvent(self, event) -> None:
-        self.paint()
+        # self.repaint()
 
     def contextMenuEvent(self, event) -> None:
         """Открытие контекстного меню"""
         row, col = self.getCell(event.x(), event.y())
         self.last_cell = row, col
-        if not (0 <= row < self.rows) or not (0 <= col < self.cols):
+        if not (0 <= row < self.rows) or not (0 <= col < self.cols) or self.graph_name is None:
             return
         menu = QMenu(self)
         if not self.grid[row][col]:
@@ -185,8 +187,6 @@ class Canvas(QWidget):
     def paint(self):
         self.do_paint = True
         self.repaint()
-
-
 
 
 if __name__ == '__main__':
