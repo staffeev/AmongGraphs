@@ -119,9 +119,10 @@ class Canvas(QWidget):
 
     def moveNode(self, row, col) -> None:
         """Метод для перемещения вершины по холсту"""
-        print(row, col)
         old_row, old_col = self.selected_item
-        self.grid[row][col] = self.grid[old_row][old_col]
+        if self.grid[col][row] is not None:
+            return
+        self.grid[col][row] = self.grid[old_row][old_col]
         self.grid[old_row][old_col] = None
         self.graph_elements[col, row] = self.graph_elements.pop((old_row, old_col))
         self.graph_elements[col, row].setCell(col, row)
@@ -155,14 +156,10 @@ class Canvas(QWidget):
             self.repaint()
         elif self.node_selected:
             self.moveNode(*self.getCell(event.x(), event.y()))
-            print(self.selected_item)
-
-
 
     def resizeEvent(self, event) -> None:
         """Проверка границы при изменении размера виджета"""
         self.checkBorders()
-        # self.repaint()
 
     def contextMenuEvent(self, event) -> None:
         """Открытие контекстного меню"""
