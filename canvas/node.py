@@ -15,12 +15,12 @@ class CanvasNode:
         """Установка цвета в зависимости от количества сязаннных ребер"""
         # TODO
 
-    def draw(self, qp: QPainter, p: tuple[int, int], dist: int) -> None:
+    def draw(self, qp: QPainter, p: tuple[int, int], dist: int, color=RED) -> None:
         """Рисование вершины"""
         # TODO
         font = QFont()
         font.setPixelSize(dist // 2)
-        qp.setBrush(RED)
+        qp.setBrush(color)
         qp.setPen(BLACK)
         qp.setFont(font)
         qp.drawEllipse(*p, dist, dist)
@@ -31,6 +31,7 @@ class CanvasNode:
         pass
 
     def select(self) -> None:
+        """Метод для выделения вершины"""
         # TODO
         pass
 

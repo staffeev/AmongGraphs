@@ -2,7 +2,8 @@ from models.elements import Graph, Vertex
 from models import db_session
 from forms.add_new_data_form import AddNewData
 from sqlalchemy.orm import Session
-from settings import ENTER_NODE
+from settings import ENTER_NODE, ARE_YOU_SURE
+from PyQt5.QtWidgets import QMessageBox, QWidget
 
 
 def str_is_float(s: str) -> bool:
@@ -34,7 +35,7 @@ def create_ribs(graph: Graph) -> dict:
     return ribs
 
 
-def add_node(graph_name: str) -> None:
+def add_node(graph_name: str, cell=None) -> None:
     """Функция для создания новой вершины в графе"""
     session = db_session.create_session()
     graph = get_graph_by_name(session, graph_name)
@@ -44,7 +45,26 @@ def add_node(graph_name: str) -> None:
         return
     v = Vertex(name=form.inputData.text())
     graph.add_nodes(v)
+    if cell is not None:
+        v.set_cell(cell)
     session.add(v)
+    session.commit()
+    session.close()
+
+
+def delete_node(parent, graph_name: str, selected: set[int]) -> None:
+    """Функция для удаления вершин из графа"""
+    session = db_session.create_session()
+    graph = get_graph_by_name(session, graph_name)
+    nodes = [graph.nodes[i] for i in selected]
+    flag = QMessageBox.question(
+        parent, "Delete nodes",
+        f"{ARE_YOU_SURE} nodes {', '.join(map(str, nodes))}"
+    )
+    if flag == QMessageBox.No:
+        session.close()
+        return
+    [session.delete(node) for node in nodes]
     session.commit()
     session.close()
 

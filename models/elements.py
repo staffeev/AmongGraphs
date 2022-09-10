@@ -51,6 +51,10 @@ class Vertex(SqlAlchemyBase):
         free_cells = set(product(range(MAX_CANVAS_SIZE), repeat=2)) - cells
         self.row, self.col = choice(list(free_cells))
 
+    def set_cell(self, cell):
+        """Установка вершины в ячейку"""
+        self.row, self.col = cell
+
     def rename(self, name: str) -> None:
         """Метод для переименования вершины"""
         self.name = name.strip()

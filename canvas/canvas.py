@@ -5,7 +5,7 @@ from PyQt5.QtCore import Qt
 from settings import DEFAULT_DIST, ZOOM_STEP, RED, DARK_GRAY, MIN_ZOOM, \
     MAX_ZOOM, MAX_CANVAS_SIZE
 from models import db_session
-from functions import get_graph_by_name
+from functions import get_graph_by_name, add_node
 from canvas.node import CanvasNode
 
 
@@ -162,15 +162,17 @@ class Canvas(QWidget):
         """Метод для добавления вершины на холст"""
         # TODO
         row, col = self.last_cell
-        self.grid[row][col] = 1
-        self.paint()
+        # self.grid[row][col] = 1
+        add_node(self.graph_name, self.last_cell[::-1])
+        self.loadGraph(self.graph_name)
+        self.repaint()
 
     def deleteNode(self) -> None:
         """Метод для удаления вершины с холста"""
         # TODO
         row, col = self.last_cell
         self.grid[row][col] = 0
-        self.parent()
+        self.repaint()
         pass
 
     def renameNode(self) -> None:

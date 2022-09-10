@@ -2,7 +2,8 @@ from PyQt5.QtWidgets import QWidget, QHeaderView, QMessageBox, \
     QTableWidgetItem as QItem
 from PyQt5 import uic
 from PyQt5.QtCore import Qt
-from functions import str_is_float, get_graph_by_name, create_ribs, add_node
+from functions import str_is_float, get_graph_by_name, create_ribs, add_node, \
+    delete_node
 from settings import ARE_YOU_SURE, ENTER_NODE, GRAY, NOT_NUMBER, NTET
 from forms.add_new_data_form import AddNewData
 from models import db_session
@@ -168,19 +169,7 @@ class GraphMatrix(QWidget):
         selected = self.getSelectedRowsOrCols()
         if not selected:
             return
-        session = db_session.create_session()
-        graph = get_graph_by_name(session, self.graph_name)
-        nodes = [graph.nodes[i] for i in selected]
-        flag = QMessageBox.question(
-            self, "Delete nodes",
-            f"{ARE_YOU_SURE} nodes {', '.join(map(str, nodes))}"
-        )
-        if flag == QMessageBox.No:
-            session.close()
-            return
-        [session.delete(node) for node in nodes]
-        session.commit()
-        session.close()
+        delete_node(self, self.graph_name, selected)
         self.loadTable()
 
     def save(self):
