@@ -146,6 +146,19 @@ class Canvas(QWidget):
         if event.button() == Qt.LeftButton:
             self.move_canvas = False
             self.node_selected = False
+            if self.selected_item:
+                self.processNodeShift()
+
+    def processNodeShift(self) -> None:
+        """Сохранение изменения положения вершины"""
+        session = db_session.create_session()
+        graph = get_graph_by_name(session, self.graph_name)
+        row, col = self.selected_item
+        selected_node = self.grid[row][col]
+        graph_node = graph.get_nodes_by_name(selected_node.name)[0]
+        graph_node.set_cell((row, col))
+        session.commit()
+        session.close()
 
     def mouseMoveEvent(self, event) -> None:
         """Обработка перемещения холста с зажатой кнопкой мыши"""
@@ -190,7 +203,6 @@ class Canvas(QWidget):
 
     def deleteNode(self) -> None:
         """Метод для удаления вершины с холста"""
-        # TODO
         col, row = self.last_cell
         if not delete_node(self, self.graph_name, (row, col)):
             return
