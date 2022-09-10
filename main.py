@@ -1,9 +1,4 @@
 import sys
-
-import networkx as nx
-from PIL.ImageQt import ImageQt
-from matplotlib import pyplot as plt
-
 from canvas.canvas import Canvas
 from forms.add_new_data_form import AddNewData
 from forms.choose_graph import ChooseGraphForm
@@ -11,18 +6,15 @@ from forms.add_from_csv import AddFromCsv
 from forms.tree_element import TreeItem
 from forms.edge_list import EdgeList
 from forms.matrix import GraphMatrix
-from models.elements import Graph
-from functions import get_graph_names, create_ribs, get_graph_by_name
+from models.graph import Graph
+from functions import get_graph_names, get_graph_by_name
 from PyQt5.Qt import QStandardItemModel
 from PyQt5 import uic
 from PyQt5.QtGui import QCloseEvent
-from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox, QWidget
-from PyQt5.QtGui import QPixmap
+from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox
 from models import db_session
 from settings import NOT_OPEN, ENTER_GRAPH
-import io
 from typing import Union
-from PIL import Image
 
 
 def except_hook(cls, exception, traceback):

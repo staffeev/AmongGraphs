@@ -1,4 +1,4 @@
-from models.elements import Vertex
+from models.node import Vertex
 from settings import RED, BLACK
 from PyQt5.QtGui import QPainter, QFont
 from PyQt5.QtCore import Qt

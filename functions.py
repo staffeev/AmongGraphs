@@ -1,9 +1,10 @@
-from models.elements import Graph, Vertex
+from models.node import Vertex
+from models.graph import Graph
 from models import db_session
 from forms.add_new_data_form import AddNewData
 from sqlalchemy.orm import Session
 from settings import ENTER_NODE, ARE_YOU_SURE
-from PyQt5.QtWidgets import QMessageBox, QWidget
+from PyQt5.QtWidgets import QMessageBox
 from typing import Union
 
 

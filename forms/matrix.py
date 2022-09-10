@@ -5,9 +5,9 @@ from PyQt5.QtCore import Qt
 from functions import str_is_float, get_graph_by_name, create_ribs, add_node, \
     delete_node, rename_node
 from settings import ARE_YOU_SURE, ENTER_NODE, GRAY, NOT_NUMBER, NTET
-from forms.add_new_data_form import AddNewData
 from models import db_session
-from models.elements import Rib, Vertex
+from models.edge import Rib
+from models.node import Vertex
 from typing import Union
 
 

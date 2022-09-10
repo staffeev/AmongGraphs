@@ -7,7 +7,7 @@ from settings import DEFAULT_DIST, ZOOM_STEP, RED, DARK_GRAY, MIN_ZOOM, \
     MOVE_LEFT, MOVE_RIGHT
 from models import db_session
 from functions import get_graph_by_name, add_node, delete_node, rename_node
-from canvas.node import CanvasNode
+from canvas.canvas_node import CanvasNode
 
 
 class Canvas(QWidget):
