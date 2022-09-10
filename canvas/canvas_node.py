@@ -19,10 +19,6 @@ class CanvasNode:
         """Установка новых координат"""
         self.row, self.col = row, col
 
-    def setColor(self) -> None:
-        """Установка цвета в зависимости от количества сязаннных ребер"""
-        # TODO
-
     def draw(self, qp: QPainter, p: tuple[int, int], dist: int, color=RED) -> None:
         """Рисование вершины"""
         # TODO
@@ -33,14 +29,4 @@ class CanvasNode:
         qp.setFont(font)
         qp.drawEllipse(*p, dist, dist)
         qp.drawText(*p, dist, dist, Qt.AlignCenter, self.node_name)
-
-    def checkCollide(self) -> None:
-        # TODO
-        pass
-
-    def select(self) -> None:
-        """Метод для выделения вершины"""
-        # TODO
-        pass
-
 

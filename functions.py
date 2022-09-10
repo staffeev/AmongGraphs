@@ -6,6 +6,30 @@ from sqlalchemy.orm import Session
 from settings import ENTER_NODE, ARE_YOU_SURE
 from PyQt5.QtWidgets import QMessageBox
 from typing import Union
+from math import cos, sin, radians
+
+
+def rotate_figure(points: list[tuple[int, int]], alpha: float, xc: int, yc: int):
+    """Функция для поворота фигуры на определенный угол"""
+    new_points = []
+    # alpha = abs(alpha)
+    for i in points:
+        temp_x, temp_y = i
+        new_points.append(
+            (xc + (temp_x - xc) * cos(alpha) - (temp_y - yc) * sin(alpha),
+             yc + (temp_x - xc) * cos(alpha) + (temp_y - yc) * sin(alpha))
+        )
+    return new_points
+
+
+def get_equilateral_triangle(x, y, side):
+    """Функция, возвращающая координаты вершин равностороннего треугольника
+    по одной из его вершин"""
+    x2 = x + side * cos(radians(60))
+    y2 = y + side * sin(radians(60))
+    x3 = x + side * cos(radians(120))
+    y3 = y + side * sin(radians(120))
+    return (x, y), (x2, y2), (x3, y3)
 
 
 def str_is_float(s: str) -> bool:

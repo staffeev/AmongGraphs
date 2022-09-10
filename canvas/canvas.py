@@ -31,6 +31,7 @@ class Canvas(QWidget):
         self.graph_nodes = {}
         self.graph_ribs = {}
         self.selected_item = None
+        self.selected_rib = None
         self.last_cell = None
 
     def loadGraph(self, name) -> None:
@@ -43,12 +44,13 @@ class Canvas(QWidget):
         self.graph_name = name
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
-        for rib in graph.ribs.values():
-            print(rib)
-            self.graph_ribs[rib.get_crds()] = CanvasEdge(rib)
         for node in graph.nodes:
             self.graph_nodes[node.cell] = CanvasNode(node)
             self.grid[node.row][node.col] = node
+        for rib in graph.ribs.values():
+            n1 = self.graph_nodes[rib.nodes[0].cell]
+            n2 = self.graph_nodes[rib.nodes[1].cell]
+            self.graph_ribs[rib.get_crds()] = CanvasEdge(n1, n2, rib, self)
         session.close()
 
     def paintEvent(self, event) -> None:
@@ -71,8 +73,7 @@ class Canvas(QWidget):
         """Вызов отрисовки каждого ребра"""
         for el in self.graph_ribs.values():
             el.draw(
-                self.qp, self.getPoint(*el.start_cell),
-                self.getPoint(*el.end_cell), self.dist
+                self.qp, self.dist
             )
 
     def drawPoints(self) -> None:
