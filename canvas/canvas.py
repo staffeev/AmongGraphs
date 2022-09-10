@@ -119,6 +119,7 @@ class Canvas(QWidget):
 
     def moveNode(self, row, col) -> None:
         """Метод для перемещения вершины по холсту"""
+        print(row, col)
         old_row, old_col = self.selected_item
         self.grid[row][col] = self.grid[old_row][old_col]
         self.grid[old_row][old_col] = None
@@ -180,7 +181,9 @@ class Canvas(QWidget):
 
     def getCell(self, x: int, y: int) -> tuple[int, int]:
         """Возвращает индекс клетки в сетке по координатам"""
-        return int((y - self.y) // self.dist), int((x - self.x) // self.dist)
+        row = min(max(int((y - self.y) // self.dist), 0), self.rows - 1)
+        col = min(max(int((x - self.x) // self.dist), 0), self.cols - 1)
+        return row, col
 
     def addNode(self) -> None:
         """Метод для добавления вершины на холст"""
