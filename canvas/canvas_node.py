@@ -1,12 +1,13 @@
 from models.node import Vertex
 from settings import RED, BLACK
-from PyQt5.QtGui import QPainter, QFont
+from PyQt5.QtGui import QFont
 from PyQt5.QtCore import Qt
 
 
 class CanvasNode:
     """Класс для вершины на холсте"""
-    def __init__(self, node: Vertex):
+    def __init__(self, node: Vertex, parent):
+        self.parent = parent
         self.node_id = node.id
         self.node_name = node.name
         self.row, self.col = node.cell
@@ -19,14 +20,15 @@ class CanvasNode:
         """Установка новых координат"""
         self.row, self.col = row, col
 
-    def draw(self, qp: QPainter, p: tuple[int, int], dist: int, color=RED) -> None:
+    def draw(self):
         """Рисование вершины"""
-        # TODO
+        dist = self.parent.dist
+        x, y = self.parent.getPoint(self.row, self.col)
         font = QFont()
         font.setPixelSize(dist // 2)
-        qp.setBrush(color)
-        qp.setPen(BLACK)
-        qp.setFont(font)
-        qp.drawEllipse(*p, dist, dist)
-        qp.drawText(*p, dist, dist, Qt.AlignCenter, self.node_name)
+        self.parent.qp.setBrush(RED)
+        self.parent.qp.setPen(BLACK)
+        self.parent.qp.setFont(font)
+        self.parent.qp.drawEllipse(x, y, dist, dist)
+        self.parent.qp.drawText(x, y, dist, dist, Qt.AlignCenter, self.node_name)
 

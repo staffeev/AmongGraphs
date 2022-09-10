@@ -6,29 +6,54 @@ from sqlalchemy.orm import Session
 from settings import ENTER_NODE, ARE_YOU_SURE
 from PyQt5.QtWidgets import QMessageBox
 from typing import Union
-from math import cos, sin, radians
+from math import cos, sin, radians, atan2
+import math
 
 
-def rotate_figure(points: list[tuple[int, int]], alpha: float, xc: int, yc: int):
+def get_angle(x1, y1, x2, y2) -> float:
+    """Возвращает угол прямой"""
+    return radians(180) - atan2(y2 - y1, x2 - x1)
+
+
+def get_triangle_center(p1, p2, p3) -> tuple[float, float]:
+    """Возвращает центр правильного треугольника"""
+    x = p1[0] + p2[0] + p3[0]
+    y = p1[1] + p2[1] + p3[1]
+    return x / 3, y / 3
+
+
+def get_intersect_point(xc: int, yc: int, r: int, alpha: float) -> tuple[float, float]:
+    """Возвращает точку пересечения окружности и прямой,
+    выходящей из центра окружности"""
+    return r * cos(alpha) + xc, r * sin(alpha) + yc
+
+
+def rotate_figure(points: list[tuple[int, int]], alpha: float, xc, yc):
     """Функция для поворота фигуры на определенный угол"""
+    print(xc, yc)
     new_points = []
-    # alpha = abs(alpha)
     for i in points:
         temp_x, temp_y = i
+        # new_points.append((temp_x + r * cos(alpha), temp_y + r * sin(alpha)))
         new_points.append(
             (xc + (temp_x - xc) * cos(alpha) - (temp_y - yc) * sin(alpha),
              yc + (temp_x - xc) * cos(alpha) + (temp_y - yc) * sin(alpha))
         )
+        print((temp_x, temp_y), new_points[-1])
+        # new_points.append(
+        #     (temp_x * cos(alpha) - temp_y * sin(alpha),
+        #      temp_x * cos(alpha) + temp_y * sin(alpha))
+        # )
     return new_points
 
 
-def get_equilateral_triangle(x, y, side):
+def get_equilateral_triangle(x, y, side, alpha):
     """Функция, возвращающая координаты вершин равностороннего треугольника
     по одной из его вершин"""
-    x2 = x + side * cos(radians(60))
-    y2 = y + side * sin(radians(60))
-    x3 = x + side * cos(radians(120))
-    y3 = y + side * sin(radians(120))
+    x2 = x + side * cos(radians(30) - alpha)
+    y2 = y + side * sin(radians(-30) - alpha)
+    x3 = x + side * cos(alpha - radians(30))
+    y3 = y + side * sin(radians(30) + alpha)
     return (x, y), (x2, y2), (x3, y3)
 
 

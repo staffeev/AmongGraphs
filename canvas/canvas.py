@@ -45,7 +45,7 @@ class Canvas(QWidget):
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
         for node in graph.nodes:
-            self.graph_nodes[node.cell] = CanvasNode(node)
+            self.graph_nodes[node.cell] = CanvasNode(node, self)
             self.grid[node.row][node.col] = node
         for rib in graph.ribs.values():
             n1 = self.graph_nodes[rib.nodes[0].cell]
@@ -72,14 +72,13 @@ class Canvas(QWidget):
     def drawRibs(self) -> None:
         """Вызов отрисовки каждого ребра"""
         for el in self.graph_ribs.values():
-            el.draw(
-                self.qp, self.dist
-            )
+            el.draw()
 
     def drawPoints(self) -> None:
         """Вызов отрисовки каждой вершины"""
         for el in self.graph_nodes.values():
-            el.draw(self.qp, self.getPoint(el.row, el.col), self.dist)
+            # el.draw(self.qp, self.getPoint(el.row, el.col), self.dist)
+            el.draw()
 
     def drawGrid(self) -> None:
         """Отрисовка сетки"""
@@ -111,6 +110,10 @@ class Canvas(QWidget):
     def getPoint(self, row: int, col: int) -> tuple[int, int]:
         """Возвращает координаты ячейки клетчатого поля"""
         return self.x + row * self.dist, self.y + col * self.dist
+
+    def getPointCenter(self, row: int, col: int) -> tuple[int, int]:
+        x, y = self.getPoint(row, col)
+        return x + self.dist // 2, y + self.dist // 2
 
     def calcDist(self) -> None:
         """Пересчёт расстояния между линиями сетки"""
