@@ -41,6 +41,12 @@ class Rib(SqlAlchemyBase):
         except IndexError:
             return self.id
 
+    def get_crds(self) -> tuple[int, int, int, int]:
+        """Возвращает екоординаты начала и конца ребра"""
+        start = self.nodes[0].cell
+        end = self.nodes[1].cell
+        return start[0], start[1], end[0], end[1]
+
     def add_nodes(self, start: Vertex, end: Vertex) -> None:
         """Метод добавления начальной и конечной вершины ребра"""
         self.nodes.append(start)

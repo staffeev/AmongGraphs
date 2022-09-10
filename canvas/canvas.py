@@ -8,6 +8,7 @@ from settings import DEFAULT_DIST, ZOOM_STEP, RED, DARK_GRAY, MIN_ZOOM, \
 from models import db_session
 from functions import get_graph_by_name, add_node, delete_node, rename_node
 from canvas.canvas_node import CanvasNode
+from canvas.canvas_edge import CanvasEdge
 
 
 class Canvas(QWidget):
@@ -27,7 +28,8 @@ class Canvas(QWidget):
         self.dif_x = self.dif_y = 0
         self.node_selected = False
         self.x = self.y = 0
-        self.graph_elements = {}
+        self.graph_nodes = {}
+        self.graph_ribs = {}
         self.selected_item = None
         self.last_cell = None
 
@@ -36,12 +38,16 @@ class Canvas(QWidget):
         # TODO
         if name is None:
             return
-        self.graph_elements = {}
+        self.graph_nodes = {}
+        self.graph_ribs = {}
         self.graph_name = name
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
+        for rib in graph.ribs.values():
+            print(rib)
+            self.graph_ribs[rib.get_crds()] = CanvasEdge(rib)
         for node in graph.nodes:
-            self.graph_elements[node.cell] = CanvasNode(node)
+            self.graph_nodes[node.cell] = CanvasNode(node)
             self.grid[node.row][node.col] = node
         session.close()
 
@@ -57,14 +63,21 @@ class Canvas(QWidget):
 
     def drawElements(self) -> None:
         """Отрисовка элементов графа"""
-
+        self.drawRibs()
         self.drawPoints()
         # TODO
 
+    def drawRibs(self) -> None:
+        """Вызов отрисовки каждого ребра"""
+        for el in self.graph_ribs.values():
+            el.draw(
+                self.qp, self.getPoint(*el.start_cell),
+                self.getPoint(*el.end_cell), self.dist
+            )
+
     def drawPoints(self) -> None:
         """Вызов отрисовки каждой вершины"""
-        for cell, el in self.graph_elements.items():
-            # color = SELECTED_ITEM if cell in self.selected_items else RED
+        for el in self.graph_nodes.values():
             el.draw(self.qp, self.getPoint(el.row, el.col), self.dist)
 
     def drawGrid(self) -> None:
@@ -124,8 +137,8 @@ class Canvas(QWidget):
             return
         self.grid[col][row] = self.grid[old_row][old_col]
         self.grid[old_row][old_col] = None
-        self.graph_elements[col, row] = self.graph_elements.pop((old_row, old_col))
-        self.graph_elements[col, row].setCell(col, row)
+        self.graph_nodes[col, row] = self.graph_nodes.pop((old_row, old_col))
+        self.graph_nodes[col, row].setCell(col, row)
         self.selected_item = (col, row)
         self.repaint()
 
@@ -133,7 +146,7 @@ class Canvas(QWidget):
         """Обработка нажатия кнопки мыши"""
         if event.button() == Qt.LeftButton:
             col, row = self.getCell(event.x(), event.y())
-            if self.graph_elements.get((row, col), 0):
+            if self.graph_nodes.get((row, col), 0):
                 self.selected_item = (row, col)
                 self.node_selected = True
                 return
@@ -206,7 +219,7 @@ class Canvas(QWidget):
         col, row = self.last_cell
         if not delete_node(self, self.graph_name, (row, col)):
             return
-        self.graph_elements.pop((row, col))
+        self.graph_nodes.pop((row, col))
         self.grid[row][col] = None
         self.repaint()
 
@@ -216,7 +229,7 @@ class Canvas(QWidget):
         new_name = rename_node(self.graph_name, (row, col))
         if new_name is None:
             return
-        self.graph_elements[row, col].setName(new_name)
+        self.graph_nodes[row, col].setName(new_name)
         self.repaint()
 
 
