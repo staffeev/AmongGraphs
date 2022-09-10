@@ -11,6 +11,10 @@ class CanvasNode:
         self.node_name = node.name
         self.row, self.col = node.cell
 
+    def setName(self, name: str):
+        """Установка нового имени"""
+        self.node_name = name
+
     def setColor(self) -> None:
         """Установка цвета в зависимости от количества сязаннных ребер"""
         # TODO

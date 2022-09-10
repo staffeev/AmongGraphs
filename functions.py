@@ -72,21 +72,26 @@ def add_node(graph_name: str, cell=None) -> None:
     session.close()
 
 
-def delete_node(parent, graph_name: str, selected: set[int]) -> None:
+def delete_node(parent, graph_name: str, selected: Union[tuple, set[int]]) -> bool:
     """Функция для удаления вершин из графа"""
     session = db_session.create_session()
     graph = get_graph_by_name(session, graph_name)
-    nodes = [graph.nodes[i] for i in selected]
+    if isinstance(session, set):
+        nodes = [graph.nodes[i] for i in selected]
+    else:
+        nodes = [i for i in graph.nodes if i.cell == selected]
+        print(nodes)
     flag = QMessageBox.question(
         parent, "Delete nodes",
         f"{ARE_YOU_SURE} nodes {', '.join(map(str, nodes))}"
     )
     if flag == QMessageBox.No:
         session.close()
-        return
+        return False
     [session.delete(node) for node in nodes]
     session.commit()
     session.close()
+    return True
 
 
 def create_matrix(graph: Graph) -> list[list]:

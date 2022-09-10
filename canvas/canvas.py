@@ -5,7 +5,7 @@ from PyQt5.QtCore import Qt
 from settings import DEFAULT_DIST, ZOOM_STEP, RED, DARK_GRAY, MIN_ZOOM, \
     MAX_ZOOM, MAX_CANVAS_SIZE
 from models import db_session
-from functions import get_graph_by_name, add_node, delete_node
+from functions import get_graph_by_name, add_node, delete_node, rename_node
 from canvas.node import CanvasNode
 
 
@@ -25,7 +25,7 @@ class Canvas(QWidget):
         self.move_canvas = False
         self.dif_x = self.dif_y = 0
         self.x = self.y = 0
-        self.graph_elements = []
+        self.graph_elements = {}
         self.selectedElement = None
         self.last_cell = None
 
@@ -34,12 +34,12 @@ class Canvas(QWidget):
         # TODO
         if name is None:
             return
-        self.graph_elements = []
+        self.graph_elements = {}
         self.graph_name = name
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
         for node in graph.nodes:
-            self.graph_elements.append(CanvasNode(node))
+            self.graph_elements[node.cell] = CanvasNode(node)
             self.grid[node.row][node.col] = node
         session.close()
 
@@ -62,7 +62,7 @@ class Canvas(QWidget):
     def drawPoints(self) -> None:
         """Вызов отрисовки каждой вершины"""
         [el.draw(self.qp, self.getPoint(el.row, el.col), self.dist)
-         for el in self.graph_elements]
+         for el in self.graph_elements.values()]
 
     def drawGrid(self) -> None:
         """Отрисовка сетки"""
@@ -142,11 +142,11 @@ class Canvas(QWidget):
     def contextMenuEvent(self, event) -> None:
         """Открытие контекстного меню"""
         row, col = self.getCell(event.x(), event.y())
-        self.last_cell = col, row
+        self.last_cell = row, col
         if not (0 <= row < self.rows) or not (0 <= col < self.cols) or self.graph_name is None:
             return
         menu = QMenu(self)
-        if not self.grid[row][col]:
+        if not self.grid[col][row]:
             menu.addAction('Add node', self.addNode)
         else:
             menu.addAction('Rename', self.renameNode)
@@ -160,23 +160,28 @@ class Canvas(QWidget):
 
     def addNode(self) -> None:
         """Метод для добавления вершины на холст"""
-        add_node(self.graph_name, self.last_cell)
+        add_node(self.graph_name, self.last_cell[::-1])
         self.loadGraph(self.graph_name)
         self.repaint()
 
     def deleteNode(self) -> None:
         """Метод для удаления вершины с холста"""
         # TODO
-        row, col = self.last_cell
-        self.grid[row][col] = 0
+        col, row = self.last_cell
+        if not delete_node(self, self.graph_name, (row, col)):
+            return
+        self.graph_elements.pop((row, col))
+        self.grid[row][col] = None
         self.repaint()
-        pass
 
     def renameNode(self) -> None:
-        session = db_session.create_session()
-        session.close()
-        # TODO
-        pass
+        """Переименование вершины"""
+        col, row = self.last_cell
+        new_name = rename_node(self.graph_name, (row, col))
+        if new_name is None:
+            return
+        self.graph_elements[row, col].setName(new_name)
+        self.repaint()
 
 
 if __name__ == '__main__':
