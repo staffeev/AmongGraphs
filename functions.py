@@ -80,7 +80,6 @@ def delete_node(parent, graph_name: str, selected: Union[tuple, set[int]]) -> bo
         nodes = [graph.nodes[i] for i in selected]
     else:
         nodes = [i for i in graph.nodes if i.cell == selected]
-        print(nodes)
     flag = QMessageBox.question(
         parent, "Delete nodes",
         f"{ARE_YOU_SURE} nodes {', '.join(map(str, nodes))}"

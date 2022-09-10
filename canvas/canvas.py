@@ -3,7 +3,8 @@ from PyQt5.QtWidgets import QWidget, QApplication, QMenu
 from PyQt5.QtGui import QPainter
 from PyQt5.QtCore import Qt
 from settings import DEFAULT_DIST, ZOOM_STEP, RED, DARK_GRAY, MIN_ZOOM, \
-    MAX_ZOOM, MAX_CANVAS_SIZE
+    MAX_ZOOM, MAX_CANVAS_SIZE, BLUE, SELECTED_ITEM, MOVE_UP, MOVE_DOWN, \
+    MOVE_LEFT, MOVE_RIGHT
 from models import db_session
 from functions import get_graph_by_name, add_node, delete_node, rename_node
 from canvas.node import CanvasNode
@@ -24,9 +25,10 @@ class Canvas(QWidget):
         self.dist = DEFAULT_DIST * self.zoom
         self.move_canvas = False
         self.dif_x = self.dif_y = 0
+        self.node_selected = False
         self.x = self.y = 0
         self.graph_elements = {}
-        self.selectedElement = None
+        self.selected_item = None
         self.last_cell = None
 
     def loadGraph(self, name) -> None:
@@ -61,8 +63,9 @@ class Canvas(QWidget):
 
     def drawPoints(self) -> None:
         """Вызов отрисовки каждой вершины"""
-        [el.draw(self.qp, self.getPoint(el.row, el.col), self.dist)
-         for el in self.graph_elements.values()]
+        for cell, el in self.graph_elements.items():
+            # color = SELECTED_ITEM if cell in self.selected_items else RED
+            el.draw(self.qp, self.getPoint(el.row, el.col), self.dist)
 
     def drawGrid(self) -> None:
         """Отрисовка сетки"""
@@ -114,9 +117,24 @@ class Canvas(QWidget):
         return self.getWidth() > self.size().width() and \
             self.getHeight() > self.size().height()
 
+    def moveNode(self, row, col) -> None:
+        """Метод для перемещения вершины по холсту"""
+        old_row, old_col = self.selected_item
+        self.grid[row][col] = self.grid[old_row][old_col]
+        self.grid[old_row][old_col] = None
+        self.graph_elements[col, row] = self.graph_elements.pop((old_row, old_col))
+        self.graph_elements[col, row].setCell(col, row)
+        self.selected_item = (col, row)
+        self.repaint()
+
     def mousePressEvent(self, event) -> None:
         """Обработка нажатия кнопки мыши"""
         if event.button() == Qt.LeftButton:
+            col, row = self.getCell(event.x(), event.y())
+            if self.graph_elements.get((row, col), 0):
+                self.selected_item = (row, col)
+                self.node_selected = True
+                return
             self.move_canvas = True
             self.dif_x = self.x - event.x()
             self.dif_y = self.y - event.y()
@@ -125,14 +143,20 @@ class Canvas(QWidget):
         """Отпускание кнопки мыши"""
         if event.button() == Qt.LeftButton:
             self.move_canvas = False
+            self.node_selected = False
 
     def mouseMoveEvent(self, event) -> None:
         """Обработка перемещения холста с зажатой кнопкой мыши"""
-        if self.move_canvas:
+        if self.move_canvas and not self.node_selected:
             self.x = event.x() + self.dif_x
             self.y = event.y() + self.dif_y
             self.checkBorders()
             self.repaint()
+        elif self.node_selected:
+            self.moveNode(*self.getCell(event.x(), event.y()))
+            print(self.selected_item)
+
+
 
     def resizeEvent(self, event) -> None:
         """Проверка границы при изменении размера виджета"""

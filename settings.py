@@ -4,6 +4,8 @@ from PyQt5.QtGui import QColor
 BLACK = QColor("black")
 WHITE = QColor("white")
 RED = QColor("red")
+BLUE = QColor("blue")
+SELECTED_ITEM = QColor(0, 123, 167)
 GREEN = QColor("green")
 GRAY = QColor(192, 192, 192)
 DARK_GRAY = QColor(128, 128, 128)
@@ -28,6 +30,10 @@ ALERT_CSV = "Attention! If you add data from the table and any graph is opened, 
 CHDIR = 'chdir'  # флаг для изменения направления ребра
 NWGHT = 'nwght'  # флаг для изменения веса ребра
 NTET = 'not_edit_value'  # флаг, делающий элемент недоступным для учета в изменениях
+MOVE_RIGHT = (0, 1)
+MOVE_LEFT = (0, -1)
+MOVE_UP = (-1, 0)
+MOVE_DOWN = (1, 0)
 # Для рисования
 MAX_CANVAS_SIZE = 25
 DEFAULT_DIST = 20

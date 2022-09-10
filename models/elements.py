@@ -55,6 +55,11 @@ class Vertex(SqlAlchemyBase):
         """Установка вершины в ячейку"""
         self.row, self.col = cell
 
+    def shift_cell(self, shift):
+        """Смещение вершины"""
+        self.row += shift[0]
+        self.col += shift[1]
+
     def rename(self, name: str) -> None:
         """Метод для переименования вершины"""
         self.name = name.strip()
@@ -228,6 +233,10 @@ class Graph(SqlAlchemyBase):
     def get_nodes_by_index(self, *indexes: int) -> list[Vertex]:
         """Метод, возвращающий список вершин графа по их именам"""
         return [self.nodes[i] for i in indexes]
+
+    def get_nodes_by_cell(self, *cells: tuple[int]) -> list[Vertex]:
+        """Возвращает вершины по координаатм их ячеек"""
+        return [i for i in self.nodes if i in cells]
 
     def get_rib_by_nodes(self, node1: Union[str, int, Vertex], node2: Union[str, int, Vertex]) -> Union[Rib, None]:
         """Метод, возвращающий ребро по именам его вершин"""
