@@ -5,7 +5,7 @@ from PyQt5.QtCore import Qt
 from settings import DEFAULT_DIST, ZOOM_STEP, RED, DARK_GRAY, MIN_ZOOM, \
     MAX_ZOOM, MAX_CANVAS_SIZE
 from models import db_session
-from functions import get_graph_by_name, add_node
+from functions import get_graph_by_name, add_node, delete_node
 from canvas.node import CanvasNode
 
 
@@ -142,7 +142,7 @@ class Canvas(QWidget):
     def contextMenuEvent(self, event) -> None:
         """Открытие контекстного меню"""
         row, col = self.getCell(event.x(), event.y())
-        self.last_cell = row, col
+        self.last_cell = col, row
         if not (0 <= row < self.rows) or not (0 <= col < self.cols) or self.graph_name is None:
             return
         menu = QMenu(self)
@@ -160,10 +160,7 @@ class Canvas(QWidget):
 
     def addNode(self) -> None:
         """Метод для добавления вершины на холст"""
-        # TODO
-        row, col = self.last_cell
-        # self.grid[row][col] = 1
-        add_node(self.graph_name, self.last_cell[::-1])
+        add_node(self.graph_name, self.last_cell)
         self.loadGraph(self.graph_name)
         self.repaint()
 
@@ -176,6 +173,8 @@ class Canvas(QWidget):
         pass
 
     def renameNode(self) -> None:
+        session = db_session.create_session()
+        session.close()
         # TODO
         pass
 

@@ -4,6 +4,7 @@ from forms.add_new_data_form import AddNewData
 from sqlalchemy.orm import Session
 from settings import ENTER_NODE, ARE_YOU_SURE
 from PyQt5.QtWidgets import QMessageBox, QWidget
+from typing import Union
 
 
 def str_is_float(s: str) -> bool:
@@ -33,6 +34,25 @@ def create_ribs(graph: Graph) -> dict:
         if not rib.is_directed:
             ribs[rib.nodes[1].name, rib.nodes[0].name] = rib.weight
     return ribs
+
+
+def rename_node(graph_name: str, idx: Union[int, tuple]) -> Union[str, None]:
+    """Переименование вершиены по индексу или ячейке, в которой она находится"""
+    session = db_session.create_session()
+    graph = get_graph_by_name(session, graph_name)
+    form = AddNewData(graph.get_nodes(), ENTER_NODE)
+    if not form.exec():
+        session.close()
+        return
+    new_name = form.inputData.text()
+    if isinstance(idx, int):
+        graph.nodes[idx].rename(new_name)
+    elif isinstance(idx, tuple):
+        node = [i for i in graph.nodes if i.cell == idx][0]
+        node.rename(new_name)
+    session.commit()
+    session.close()
+    return new_name
 
 
 def add_node(graph_name: str, cell=None) -> None:

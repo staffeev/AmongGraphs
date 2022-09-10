@@ -3,7 +3,7 @@ from PyQt5.QtWidgets import QWidget, QHeaderView, QMessageBox, \
 from PyQt5 import uic
 from PyQt5.QtCore import Qt
 from functions import str_is_float, get_graph_by_name, create_ribs, add_node, \
-    delete_node
+    delete_node, rename_node
 from settings import ARE_YOU_SURE, ENTER_NODE, GRAY, NOT_NUMBER, NTET
 from forms.add_new_data_form import AddNewData
 from models import db_session
@@ -52,17 +52,8 @@ class GraphMatrix(QWidget):
 
     def renameNode(self, index: int) -> None:
         """Метод для переименования вершины графа"""
-        session = db_session.create_session()
-        graph = get_graph_by_name(session, self.graph_name)
-        form = AddNewData(graph.get_nodes(), ENTER_NODE)
-        if not form.exec():
-            session.close()
-            return
-        new_name = form.inputData.text()
+        new_name = rename_node(self.graph_name, index)
         self.setLabelText(index, new_name)
-        graph.nodes[index].rename(new_name)
-        session.commit()
-        session.close()
 
     def setLabelText(self, index: int, text: str) -> None:
         """Метод, устаналивающий текст в заголовок таблицы"""
