@@ -28,32 +28,13 @@ def get_intersect_point(xc: int, yc: int, r: int, alpha: float) -> tuple[float, 
     return r * cos(alpha) + xc, r * sin(alpha) + yc
 
 
-def rotate_figure(points: list[tuple[int, int]], alpha: float, xc, yc):
-    """Функция для поворота фигуры на определенный угол"""
-    print(xc, yc)
-    new_points = []
-    for i in points:
-        temp_x, temp_y = i
-        # new_points.append((temp_x + r * cos(alpha), temp_y + r * sin(alpha)))
-        new_points.append(
-            (xc + (temp_x - xc) * cos(alpha) - (temp_y - yc) * sin(alpha),
-             yc + (temp_x - xc) * cos(alpha) + (temp_y - yc) * sin(alpha))
-        )
-        print((temp_x, temp_y), new_points[-1])
-        # new_points.append(
-        #     (temp_x * cos(alpha) - temp_y * sin(alpha),
-        #      temp_x * cos(alpha) + temp_y * sin(alpha))
-        # )
-    return new_points
-
-
 def get_equilateral_triangle(x, y, side, alpha):
     """Функция, возвращающая координаты вершин равностороннего треугольника
     по одной из его вершин"""
-    x2 = x + side * cos(radians(30) - alpha)
+    x2 = x + side * cos(radians(-30) - alpha)
     y2 = y + side * sin(radians(-30) - alpha)
-    x3 = x + side * cos(alpha - radians(30))
-    y3 = y + side * sin(radians(30) + alpha)
+    x3 = x + side * cos(radians(30) - alpha)
+    y3 = y + side * sin(radians(30) - alpha)
     return (x, y), (x2, y2), (x3, y3)
 
 

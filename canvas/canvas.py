@@ -31,7 +31,6 @@ class Canvas(QWidget):
         self.graph_nodes = {}
         self.graph_ribs = {}
         self.selected_item = None
-        self.selected_rib = None
         self.last_cell = None
 
     def loadGraph(self, name) -> None:
@@ -39,6 +38,7 @@ class Canvas(QWidget):
         # TODO
         if name is None:
             return
+        self.selected_item = None
         self.graph_nodes = {}
         self.graph_ribs = {}
         self.graph_name = name
@@ -52,6 +52,7 @@ class Canvas(QWidget):
             n2 = self.graph_nodes[rib.nodes[1].cell]
             self.graph_ribs[rib.get_crds()] = CanvasEdge(n1, n2, rib, self)
         session.close()
+        self.repaint()
 
     def paintEvent(self, event) -> None:
         """Событие отрисовки графа"""

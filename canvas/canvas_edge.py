@@ -3,7 +3,7 @@ from PyQt5.QtGui import QPainter, QPen, QFont, QPolygon
 from PyQt5.QtCore import Qt
 from settings import BLACK, WHITE
 from math import atan2, cos, sin, degrees
-from functions import rotate_figure, get_equilateral_triangle, \
+from functions import get_equilateral_triangle, \
     get_intersect_point, get_angle, get_triangle_center
 
 
@@ -33,15 +33,11 @@ class CanvasEdge:
         xc, yc = self.parent.getPointCenter(self.end.row, self.end.col)
         angle = get_angle(self.start.row, self.start.col,
                           self.end.row, self.end.col)
-        x, y = get_intersect_point(xc, yc, side, angle)
+        x, y = get_intersect_point(xc, yc, dist, angle)
         print((xc, yc), (x, y), degrees(angle))
         points = get_equilateral_triangle(x, y, side, angle)
-        rotated_points = rotate_figure(points, angle, *get_triangle_center(*points))
-        rotated_points = points
-        print()
         self.parent.qp.setBrush(BLACK)
-        self.parent.qp.drawPolygon(QPolygon([j for i in rotated_points for j in i]))
-
+        self.parent.qp.drawPolygon(QPolygon([j for i in points for j in i]))
     def draw_label(self):
         """Рисование метки с весом ребра"""
         dist = self.parent.dist
