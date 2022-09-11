@@ -256,8 +256,6 @@ class Canvas(QWidget):
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
         nodes = graph.get_nodes_by_name(n1.node_name, n2.node_name)
-        # nodes = graph.get_nodes_by_id(n1.node_id, n2.node_id)
-        print(nodes)
         rib = Rib(weight=form.weight.value())
         if form.radio2.isChecked():
             rib.add_nodes(nodes[1], nodes[0])
@@ -307,8 +305,7 @@ class Canvas(QWidget):
         """Метод для удаления вершины с холста"""
         if not delete_node(self, self.graph_name, nodes):
             return
-        for el in nodes:
-            self.graph_nodes.pop(el)
+        self.loadGraph(self.graph_name)
         self.repaint()
 
     def renameNode(self) -> None:
