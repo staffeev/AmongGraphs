@@ -15,13 +15,6 @@ def get_angle(x1, y1, x2, y2) -> float:
     return radians(180) - atan2(y2 - y1, x2 - x1)
 
 
-def get_triangle_center(p1, p2, p3) -> tuple[float, float]:
-    """Возвращает центр правильного треугольника"""
-    x = p1[0] + p2[0] + p3[0]
-    y = p1[1] + p2[1] + p3[1]
-    return x / 3, y / 3
-
-
 def get_intersect_point(xc: float, yc: float, r: float, alpha: float) -> tuple[float, float]:
     """Возвращает точку пересечения окружности и прямой,
     выходящей из центра окружности"""
@@ -103,14 +96,14 @@ def add_node(graph_name: str, cell=None) -> None:
     session.close()
 
 
-def delete_node(parent, graph_name: str, selected: Union[tuple, set[int]]) -> bool:
+def delete_node(parent, graph_name: str, selected: Union[list[tuple], set[int]]) -> bool:
     """Функция для удаления вершин из графа"""
     session = db_session.create_session()
     graph = get_graph_by_name(session, graph_name)
     if isinstance(session, set):
         nodes = [graph.nodes[i] for i in selected]
     else:
-        nodes = [i for i in graph.nodes if i.cell == selected]
+        nodes = [i for i in graph.nodes if i.cell in selected]
     flag = QMessageBox.question(
         parent, "Delete nodes",
         f"{ARE_YOU_SURE} nodes {', '.join(map(str, nodes))}"

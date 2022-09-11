@@ -2,9 +2,8 @@ from models.edge import Rib
 from PyQt5.QtGui import QPainter, QPen, QFont, QPolygon
 from PyQt5.QtCore import Qt
 from settings import BLACK, WHITE
-from math import atan2, cos, sin, degrees
 from functions import get_equilateral_triangle, \
-    get_intersect_point, get_angle, get_triangle_center
+    get_intersect_point, get_angle
 
 
 class CanvasEdge:
@@ -34,10 +33,10 @@ class CanvasEdge:
         angle = get_angle(self.start.row, self.start.col,
                           self.end.row, self.end.col)
         x, y = get_intersect_point(xc, yc, dist // 2, angle)
-        print((xc, yc), (x, y), degrees(angle), dist // 2)
         points = get_equilateral_triangle(x, y, side, angle)
         self.parent.qp.setBrush(BLACK)
         self.parent.qp.drawPolygon(QPolygon([j for i in points for j in i]))
+
     def draw_label(self):
         """Рисование метки с весом ребра"""
         dist = self.parent.dist

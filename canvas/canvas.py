@@ -2,9 +2,8 @@ import sys
 from PyQt5.QtWidgets import QWidget, QApplication, QMenu
 from PyQt5.QtGui import QPainter
 from PyQt5.QtCore import Qt
-from settings import DEFAULT_DIST, ZOOM_STEP, RED, DARK_GRAY, MIN_ZOOM, \
-    MAX_ZOOM, MAX_CANVAS_SIZE, BLUE, SELECTED_ITEM, MOVE_UP, MOVE_DOWN, \
-    MOVE_LEFT, MOVE_RIGHT
+from settings import DEFAULT_DIST, ZOOM_STEP, DARK_GRAY, MIN_ZOOM, \
+    MAX_ZOOM, MAX_CANVAS_SIZE
 from models import db_session
 from functions import get_graph_by_name, add_node, delete_node, rename_node
 from canvas.canvas_node import CanvasNode
@@ -31,6 +30,7 @@ class Canvas(QWidget):
         self.graph_nodes = {}
         self.graph_ribs = {}
         self.selected_item = None
+        self.ctrl_nodes = []
         self.last_cell = None
 
     def loadGraph(self, name) -> None:
@@ -68,7 +68,6 @@ class Canvas(QWidget):
         """Отрисовка элементов графа"""
         self.drawRibs()
         self.drawPoints()
-        # TODO
 
     def drawRibs(self) -> None:
         """Вызов отрисовки каждого ребра"""
@@ -78,7 +77,6 @@ class Canvas(QWidget):
     def drawPoints(self) -> None:
         """Вызов отрисовки каждой вершины"""
         for el in self.graph_nodes.values():
-            # el.draw(self.qp, self.getPoint(el.row, el.col), self.dist)
             el.draw()
 
     def drawGrid(self) -> None:
@@ -147,25 +145,40 @@ class Canvas(QWidget):
         self.selected_item = (col, row)
         self.repaint()
 
+    def unselect(self):
+        [i.unselect() for i in self.ctrl_nodes]
+        self.ctrl_nodes = []
+        self.repaint()
+
     def mousePressEvent(self, event) -> None:
         """Обработка нажатия кнопки мыши"""
-        if event.button() == Qt.LeftButton:
-            col, row = self.getCell(event.x(), event.y())
-            if self.graph_nodes.get((row, col), 0):
-                self.selected_item = (row, col)
-                self.node_selected = True
-                return
-            self.move_canvas = True
-            self.dif_x = self.x - event.x()
-            self.dif_y = self.y - event.y()
+        if event.button() != Qt.LeftButton:
+            return
+        col, row = self.getCell(event.x(), event.y())
+        if self.graph_nodes.get((row, col), 0) and event.modifiers() & Qt.ControlModifier:
+            self.ctrl_nodes.append(self.graph_nodes[row, col])
+            self.graph_nodes[row, col].select()
+            self.repaint()
+            return
+        elif self.graph_nodes.get((row, col), 0):
+            self.unselect()
+            self.selected_item = (row, col)
+            self.node_selected = True
+            return
+        self.unselect()
+        self.move_canvas = True
+        self.dif_x = self.x - event.x()
+        self.dif_y = self.y - event.y()
 
     def mouseReleaseEvent(self, event) -> None:
         """Отпускание кнопки мыши"""
-        if event.button() == Qt.LeftButton:
-            self.move_canvas = False
-            self.node_selected = False
-            if self.selected_item:
-                self.processNodeShift()
+        if event.button() != Qt.LeftButton:
+            return
+        self.move_canvas = False
+        self.node_selected = False
+        if not self.selected_item:
+            return
+        self.processNodeShift()
 
     def processNodeShift(self) -> None:
         """Сохранение изменения положения вершины"""
@@ -180,30 +193,46 @@ class Canvas(QWidget):
 
     def mouseMoveEvent(self, event) -> None:
         """Обработка перемещения холста с зажатой кнопкой мыши"""
-        if self.move_canvas and not self.node_selected:
+        if self.node_selected:
+            self.moveNode(*self.getCell(event.x(), event.y()))
+        elif self.move_canvas:
             self.x = event.x() + self.dif_x
             self.y = event.y() + self.dif_y
             self.checkBorders()
             self.repaint()
-        elif self.node_selected:
-            self.moveNode(*self.getCell(event.x(), event.y()))
 
     def resizeEvent(self, event) -> None:
         """Проверка границы при изменении размера виджета"""
         self.checkBorders()
 
+    def checkInBorders(self, x: int, y: int) -> bool:
+        """Проверка на то, что курсор находистя в сетке"""
+        row = int((y - self.y) // self.dist)
+        col = int((x - self.x) // self.dist)
+        return 0 <= row < self.rows and 0 <= col < self.cols
+
     def contextMenuEvent(self, event) -> None:
         """Открытие контекстного меню"""
-        row, col = self.getCell(event.x(), event.y())
-        self.last_cell = row, col
-        if not (0 <= row < self.rows) or not (0 <= col < self.cols) or self.graph_name is None:
+        x, y = event.x(), event.y()
+        row, col = self.getCell(x, y)
+        self.last_cell = col, row
+        if not self.checkInBorders(x, y) or self.graph_name is None or self.node_selected:
             return
+        len_selected = len(self.ctrl_nodes)
         menu = QMenu(self)
-        if not self.grid[col][row]:
-            menu.addAction('Add node', self.addNode)
-        else:
+        if len_selected > 2:
+            arg = [(i.row, i.col) for i in self.ctrl_nodes]
+            menu.addAction('Delete nodes', lambda: self.deleteNode(arg))
+        elif len_selected == 2:
+            pass
+            # TODO: ADD/DELETE RIB
+        elif len_selected == 1 or self.grid[col][row]:
+            if len_selected == 1:
+                self.last_cell = self.ctrl_nodes[0].row, self.ctrl_nodes[0].col
             menu.addAction('Rename', self.renameNode)
-            menu.addAction('Delete', self.deleteNode)
+            menu.addAction('Delete', lambda: self.deleteNode([self.last_cell]))
+        else:
+            menu.addAction('Add node', self.addNode)
         menu.exec_(self.mapToGlobal(event.pos()))
         # TODO
 
@@ -215,22 +244,22 @@ class Canvas(QWidget):
 
     def addNode(self) -> None:
         """Метод для добавления вершины на холст"""
-        add_node(self.graph_name, self.last_cell[::-1])
+        add_node(self.graph_name, self.last_cell)
         self.loadGraph(self.graph_name)
         self.repaint()
 
-    def deleteNode(self) -> None:
+    def deleteNode(self, nodes) -> None:
         """Метод для удаления вершины с холста"""
-        col, row = self.last_cell
-        if not delete_node(self, self.graph_name, (row, col)):
+        if not delete_node(self, self.graph_name, nodes):
             return
-        self.graph_nodes.pop((row, col))
-        self.grid[row][col] = None
+        for el in nodes:
+            self.graph_nodes.pop(el)
+            self.grid[el[0]][el[1]] = None
         self.repaint()
 
     def renameNode(self) -> None:
         """Переименование вершины"""
-        col, row = self.last_cell
+        row, col = self.last_cell
         new_name = rename_node(self.graph_name, (row, col))
         if new_name is None:
             return
