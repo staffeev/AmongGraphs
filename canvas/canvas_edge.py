@@ -16,6 +16,10 @@ class CanvasEdge:
         self.start = n1
         self.end = n2
 
+    def swap_nodes(self):
+        """Меняет местами вершины"""
+        self.start, self.end = self.end, self.start
+
     def draw(self):
         """Рисование ребра"""
         self.parent.qp.setPen(QPen(BLACK, self.parent.dist // 10, Qt.SolidLine))
