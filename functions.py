@@ -22,10 +22,10 @@ def get_triangle_center(p1, p2, p3) -> tuple[float, float]:
     return x / 3, y / 3
 
 
-def get_intersect_point(xc: int, yc: int, r: int, alpha: float) -> tuple[float, float]:
+def get_intersect_point(xc: float, yc: float, r: float, alpha: float) -> tuple[float, float]:
     """Возвращает точку пересечения окружности и прямой,
     выходящей из центра окружности"""
-    return r * cos(alpha) + xc, r * sin(alpha) + yc
+    return xc + r * cos(alpha), yc + r * sin(-alpha)
 
 
 def get_equilateral_triangle(x, y, side, alpha):

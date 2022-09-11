@@ -29,12 +29,12 @@ class CanvasEdge:
     def draw_arrow(self):
         """Рисование стрелки с направлением ребра"""
         dist = self.parent.dist
-        side = dist // 2
+        side = dist // 3
         xc, yc = self.parent.getPointCenter(self.end.row, self.end.col)
         angle = get_angle(self.start.row, self.start.col,
                           self.end.row, self.end.col)
-        x, y = get_intersect_point(xc, yc, dist, angle)
-        print((xc, yc), (x, y), degrees(angle))
+        x, y = get_intersect_point(xc, yc, dist // 2, angle)
+        print((xc, yc), (x, y), degrees(angle), dist // 2)
         points = get_equilateral_triangle(x, y, side, angle)
         self.parent.qp.setBrush(BLACK)
         self.parent.qp.drawPolygon(QPolygon([j for i in points for j in i]))
