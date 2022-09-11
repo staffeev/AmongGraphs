@@ -5,6 +5,8 @@ from PyQt5.QtCore import Qt
 from settings import DEFAULT_DIST, ZOOM_STEP, DARK_GRAY, MIN_ZOOM, \
     MAX_ZOOM, MAX_CANVAS_SIZE, ARE_YOU_SURE
 from models import db_session
+from models.edge import Rib
+from forms.edge_data import EdgeData
 from functions import get_graph_by_name, add_node, delete_node, rename_node
 from canvas.canvas_node import CanvasNode
 from canvas.canvas_edge import CanvasEdge
@@ -223,7 +225,7 @@ class Canvas(QWidget):
             n1, n2 = self.ctrl_nodes
             edge = self.getEdge(n1.row, n1.col, n2.row, n2.col)
             if edge is None:
-                menu.addAction('Add edge', lambda: print('AA'))
+                menu.addAction('Add edge', lambda: self.addEdge(n1, n2))
             else:
                 menu.addAction('Delete edge', lambda: self.deleteEdge(edge))
                 menu.addAction('Change edge', lambda: print('BB'))
@@ -245,6 +247,33 @@ class Canvas(QWidget):
         crds1 = row1, col1, row2, col2
         crds2 = row2, col2, row1, col1
         return self.graph_ribs.get(crds1, self.graph_ribs.get(crds2, None))
+
+    def addEdge(self, n1: CanvasNode, n2: CanvasNode):
+        """Добавление ребра"""
+        form = EdgeData(n1, n2)
+        if not form.exec():
+            return
+        session = db_session.create_session()
+        graph = get_graph_by_name(session, self.graph_name)
+        nodes = graph.get_nodes_by_name(n1.node_name, n2.node_name)
+        # nodes = graph.get_nodes_by_id(n1.node_id, n2.node_id)
+        print(nodes)
+        rib = Rib(weight=form.weight.value())
+        if form.radio2.isChecked():
+            rib.add_nodes(nodes[1], nodes[0])
+        else:
+            rib.add_nodes(nodes[0], nodes[1])
+        if not form.radio0.isChecked():
+            rib.is_directed = True
+        graph.add_ribs(rib)
+        session.add(rib)
+        session.commit()
+        if form.radio2.isChecked():
+            self.graph_ribs[n2.row, n2.col, n1.row, n1.col] = CanvasEdge(n2, n1, rib, self)
+        else:
+            self.graph_ribs[n1.row, n1.col, n2.row, n2.col] = CanvasEdge(n1, n2, rib, self)
+        self.repaint()
+        session.close()
 
     def deleteEdge(self, edge: CanvasEdge):
         """Удаление ребра с холста и из БД по id (берется из edge)"""

@@ -7,7 +7,6 @@ from settings import ENTER_NODE, ARE_YOU_SURE
 from PyQt5.QtWidgets import QMessageBox
 from typing import Union
 from math import cos, sin, radians, atan2
-import math
 
 
 def get_angle(x1, y1, x2, y2) -> float:

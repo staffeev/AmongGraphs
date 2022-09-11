@@ -66,6 +66,10 @@ class Graph(SqlAlchemyBase):
         """Метод, возвращающий список вершин графа по их именам"""
         return [self.nodes[i] for i in indexes]
 
+    def get_nodes_by_id(self, *ids: int) -> list[Vertex]:
+        """Возвращает вершины по их id"""
+        return [i for i in self.nodes if i in ids]
+
     def get_nodes_by_cell(self, *cells: tuple[int]) -> list[Vertex]:
         """Возвращает вершины по координаатм их ячеек"""
         return [i for i in self.nodes if i in cells]
