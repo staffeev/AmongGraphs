@@ -293,7 +293,7 @@ class Canvas(QWidget):
             edge.is_directed = True
         session.commit()
         session.close()
-        # self.loadGraph(self.graph_name)
+        self.unselect()
         self.repaint()
 
     def deleteEdge(self, edge: CanvasEdge):
