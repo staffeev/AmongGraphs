@@ -1,9 +1,9 @@
 import sys
-from PyQt5.QtWidgets import QWidget, QApplication, QMenu
+from PyQt5.QtWidgets import QWidget, QApplication, QMenu, QMessageBox
 from PyQt5.QtGui import QPainter
 from PyQt5.QtCore import Qt
 from settings import DEFAULT_DIST, ZOOM_STEP, DARK_GRAY, MIN_ZOOM, \
-    MAX_ZOOM, MAX_CANVAS_SIZE
+    MAX_ZOOM, MAX_CANVAS_SIZE, ARE_YOU_SURE
 from models import db_session
 from functions import get_graph_by_name, add_node, delete_node, rename_node
 from canvas.canvas_node import CanvasNode
@@ -220,7 +220,15 @@ class Canvas(QWidget):
             arg = [(i.row, i.col) for i in self.ctrl_nodes]
             menu.addAction('Delete nodes', lambda: self.deleteNode(arg))
         elif len_selected == 2:
-            pass
+            n1, n2 = self.ctrl_nodes
+            edge = self.getEdge(n1.row, n1.col, n2.row, n2.col)
+            if edge is None:
+                menu.addAction('Add edge', lambda: print('AA'))
+            else:
+                menu.addAction('Delete edge', lambda: self.deleteEdge(edge))
+                menu.addAction('Change edge', lambda: print('BB'))
+            arg = [(i.row, i.col) for i in self.ctrl_nodes]
+            menu.addAction('Delete nodes', lambda: self.deleteNode(arg))
             # TODO: ADD/DELETE RIB
         elif len_selected == 1 or self.graph_nodes.get((col, row), 0):
             if len_selected == 1:
@@ -231,6 +239,28 @@ class Canvas(QWidget):
             menu.addAction('Add node', self.addNode)
         menu.exec_(self.mapToGlobal(event.pos()))
         # TODO
+
+    def getEdge(self, row1: int, col1: int, row2: int, col2: int) -> CanvasEdge:
+        """Возвращает ребро по координатам"""
+        crds1 = row1, col1, row2, col2
+        crds2 = row2, col2, row1, col1
+        return self.graph_ribs.get(crds1, self.graph_ribs.get(crds2, None))
+
+    def deleteEdge(self, edge: CanvasEdge):
+        """Удаление ребра с холста и из БД по id (берется из edge)"""
+        session = db_session.create_session()
+        graph = get_graph_by_name(session, self.graph_name)
+        rib = graph.get_rib_by_id(edge.id)
+        flag = QMessageBox.question(
+            self, 'Delete edge', f'{ARE_YOU_SURE} edge {str(rib)}')
+        if flag != QMessageBox.Yes:
+            session.close()
+            return
+        session.delete(rib)
+        session.commit()
+        session.close()
+        self.graph_ribs.pop(edge.get_crds())
+        self.repaint()
 
     def getCell(self, x: int, y: int) -> tuple[int, int]:
         """Возвращает индекс клетки в сетке по координатам"""

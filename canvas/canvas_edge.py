@@ -11,6 +11,7 @@ class CanvasEdge:
     def __init__(self, n1, n2, rib: Rib, parent):
         self.parent = parent
         self.weight = rib.weight
+        self.id = rib.id
         self.is_directed = rib.is_directed
         self.start = n1
         self.end = n2
@@ -52,3 +53,7 @@ class CanvasEdge:
         r_x, r_y, r_w, r_h = xm - dist // 3, ym - dist // 4, dist // 1.5, dist // 2
         self.parent.qp.drawRect(r_x, r_y, r_w, r_h)
         self.parent.qp.drawText(r_x, r_y, r_w, r_h, Qt.AlignCenter, str(self.weight))
+
+    def get_crds(self):
+        """Возвраащет координаты ребра"""
+        return self.start.row, self.start.col, self.end.row, self.end.col

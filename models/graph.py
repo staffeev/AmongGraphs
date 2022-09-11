@@ -70,6 +70,13 @@ class Graph(SqlAlchemyBase):
         """Возвращает вершины по координаатм их ячеек"""
         return [i for i in self.nodes if i in cells]
 
+    def get_rib_by_id(self, idx: int) -> Union[Rib, None]:
+        """Возвращает ребро по id"""
+        rib = [i for i in self.ribs.values() if i.id == idx]
+        if not rib:
+            return None
+        return rib[0]
+
     def get_rib_by_nodes(self, node1: Union[str, int, Vertex], node2: Union[str, int, Vertex]) -> Union[Rib, None]:
         """Метод, возвращающий ребро по именам его вершин"""
         if isinstance(node1, str):
