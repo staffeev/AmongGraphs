@@ -20,7 +20,6 @@ class Canvas(QWidget):
         self.prnt = parent
         self.rows = rows
         self.cols = cols
-        self.grid = [[None for _ in range(cols)] for _ in range(rows)]
         self.zoom = 1
         self.dist = DEFAULT_DIST * self.zoom
         self.move_canvas = False
@@ -46,7 +45,6 @@ class Canvas(QWidget):
         graph = get_graph_by_name(session, self.graph_name)
         for node in graph.nodes:
             self.graph_nodes[node.cell] = CanvasNode(node, self)
-            self.grid[node.row][node.col] = node
         for rib in graph.ribs.values():
             n1 = self.graph_nodes[rib.nodes[0].cell]
             n2 = self.graph_nodes[rib.nodes[1].cell]
@@ -136,10 +134,8 @@ class Canvas(QWidget):
     def moveNode(self, row, col) -> None:
         """Метод для перемещения вершины по холсту"""
         old_row, old_col = self.selected_item
-        if self.grid[col][row] is not None:
+        if (col, row) in self.graph_nodes:
             return
-        self.grid[col][row] = self.grid[old_row][old_col]
-        self.grid[old_row][old_col] = None
         self.graph_nodes[col, row] = self.graph_nodes.pop((old_row, old_col))
         self.graph_nodes[col, row].setCell(col, row)
         self.selected_item = (col, row)
@@ -185,8 +181,8 @@ class Canvas(QWidget):
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
         row, col = self.selected_item
-        selected_node = self.grid[row][col]
-        graph_node = graph.get_nodes_by_name(selected_node.name)[0]
+        selected_node = self.graph_nodes[row, col]
+        graph_node = graph.get_nodes_by_name(selected_node.node_name)[0]
         graph_node.set_cell((row, col))
         session.commit()
         session.close()
@@ -226,7 +222,7 @@ class Canvas(QWidget):
         elif len_selected == 2:
             pass
             # TODO: ADD/DELETE RIB
-        elif len_selected == 1 or self.grid[col][row]:
+        elif len_selected == 1 or self.graph_nodes.get((col, row), 0):
             if len_selected == 1:
                 self.last_cell = self.ctrl_nodes[0].row, self.ctrl_nodes[0].col
             menu.addAction('Rename', self.renameNode)
@@ -254,7 +250,6 @@ class Canvas(QWidget):
             return
         for el in nodes:
             self.graph_nodes.pop(el)
-            self.grid[el[0]][el[1]] = None
         self.repaint()
 
     def renameNode(self) -> None:
