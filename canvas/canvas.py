@@ -396,6 +396,8 @@ class Canvas(QWidget):
         d_colors = {}
         for node in graph.nodes:
             d_colors[node.cell] = len(node.ribs)
+        if not d_colors:
+            return
         colors = list(Color('green').range_to(Color('red'),
                                               max(d_colors.values()) + 1))
         for cell in self.graph_nodes:
