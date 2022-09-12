@@ -2,11 +2,12 @@ from PyQt5.QtWidgets import QWidget, QHeaderView, QMessageBox, \
     QTableWidgetItem as QItem
 from PyQt5 import uic
 from PyQt5.QtCore import Qt
-from functions import str_is_float, get_graph_by_name, create_ribs
+from functions import str_is_float, get_graph_by_name, create_ribs, add_node, \
+    delete_node, rename_node
 from settings import ARE_YOU_SURE, ENTER_NODE, GRAY, NOT_NUMBER, NTET
-from forms.add_new_data_form import AddNewData
 from models import db_session
-from models.elements import Rib, Vertex
+from models.edge import Rib
+from models.node import Vertex
 from typing import Union
 
 
@@ -51,17 +52,8 @@ class GraphMatrix(QWidget):
 
     def renameNode(self, index: int) -> None:
         """Метод для переименования вершины графа"""
-        session = db_session.create_session()
-        graph = get_graph_by_name(session, self.graph_name)
-        form = AddNewData(graph.get_nodes(), ENTER_NODE)
-        if not form.exec():
-            session.close()
-            return
-        new_name = form.inputData.text()
+        new_name = rename_node(self.graph_name, index)
         self.setLabelText(index, new_name)
-        graph.nodes[index].rename(new_name)
-        session.commit()
-        session.close()
 
     def setLabelText(self, index: int, text: str) -> None:
         """Метод, устаналивающий текст в заголовок таблицы"""
@@ -140,19 +132,10 @@ class GraphMatrix(QWidget):
 
     def addNode(self) -> None:
         """Метод для добавления вершины в граф"""
-        session = db_session.create_session()
-        graph = get_graph_by_name(session, self.graph_name)
-        form = AddNewData(graph.get_nodes(), ENTER_NODE)
-        if not form.exec():
-            session.close()
-            return
-        v = Vertex(name=form.inputData.text())
-        graph.add_nodes(v)
-        session.add(v)
-        session.commit()
-        session.close()
+        add_node(self.graph_name)
         self.expandTable()
         self.updateTableForm()
+        self.parent.canvas.loadGraph(self.graph_name)
 
     def addCoupleNodes(self, names) -> None:
         """Добавления нескольких вершин в граф"""
@@ -165,6 +148,7 @@ class GraphMatrix(QWidget):
         session.close()
         self.expandTable(len(nodes))
         self.updateTableForm()
+        self.parent.canvas.loadGraph(self.graph_name)
 
     def expandTable(self, cnt=1) -> None:
         """Метод, расширяющий матрицу на одну строку и один столбец"""
@@ -178,19 +162,8 @@ class GraphMatrix(QWidget):
         selected = self.getSelectedRowsOrCols()
         if not selected:
             return
-        session = db_session.create_session()
-        graph = get_graph_by_name(session, self.graph_name)
-        nodes = [graph.nodes[i] for i in selected]
-        flag = QMessageBox.question(
-            self, "Delete nodes",
-            f"{ARE_YOU_SURE} nodes {', '.join(map(str, nodes))}"
-        )
-        if flag == QMessageBox.No:
-            session.close()
-            return
-        [session.delete(node) for node in nodes]
-        session.commit()
-        session.close()
+        delete_node(self, self.graph_name, selected)
+        self.parent.canvas.loadGraph(self.graph_name)
         self.loadTable()
 
     def save(self):
@@ -202,7 +175,9 @@ class GraphMatrix(QWidget):
                 continue
             self.processRib(i, j)
         self.modified = {}
-        self.parent.draw_graph()
+        self.parent.showTreeOfElements()
+        self.parent.canvas.loadGraph(self.graph_name)
+        self.parent.canvas.repaint()
 
     def processRib(self, row: int, col: int) -> None:
         """Метод, обрабаотывающий измененное ребро"""

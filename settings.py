@@ -4,8 +4,11 @@ from PyQt5.QtGui import QColor
 BLACK = QColor("black")
 WHITE = QColor("white")
 RED = QColor("red")
+BLUE = QColor("blue")
+SELECTED_ITEM_COLOR = QColor(0, 123, 167)
 GREEN = QColor("green")
 GRAY = QColor(192, 192, 192)
+DARK_GRAY = QColor(128, 128, 128)
 # Фразы для сообщений
 CANNOT_ADD = "You cannot add a new row until you input data in last one"
 NO_GRAPHS_WITH_NAME = "There are no graphs with this name"
@@ -25,5 +28,15 @@ NOT_CHOSEN_FILE = "You have not chosen file to open"
 ALERT_CSV = "Attention! If you add data from the table and any graph is opened, all previous data will be deleted. If the data has errors, the corresponding one will not be added. Do you want to accept the changes?"
 # Некоторые коды
 CHDIR = 'chdir'  # флаг для изменения направления ребра
-NWGHT = 'nwght'
-NTET = 'not_edit_value'
+NWGHT = 'nwght'  # флаг для изменения веса ребра
+NTET = 'not_edit_value'  # флаг, делающий элемент недоступным для учета в изменениях
+MOVE_RIGHT = (0, 1)
+MOVE_LEFT = (0, -1)
+MOVE_UP = (-1, 0)
+MOVE_DOWN = (1, 0)
+# Для рисования
+MAX_CANVAS_SIZE = 25
+DEFAULT_DIST = 20
+ZOOM_STEP = 1.5
+MIN_ZOOM = 0.5
+MAX_ZOOM = ZOOM_STEP ** 6

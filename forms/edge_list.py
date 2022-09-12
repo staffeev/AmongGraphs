@@ -2,7 +2,7 @@ from PyQt5.QtWidgets import QWidget, QTableWidgetItem as QItem, QHeaderView, \
     QMessageBox, QTableWidgetSelectionRange
 from forms.table_checkbox import TableCheckbox
 from PyQt5 import uic
-from models.elements import Rib
+from models.edge import Rib
 from settings import ARE_YOU_SURE, NOT_NUMBER, EMPTY, NOT_DIF_NODES, \
     NOT_DIF_EDGES
 from functions import get_graph_by_name, str_is_float
@@ -183,7 +183,8 @@ class EdgeList(QWidget):
         self.modified = {}
         self.new_ribs = 0
         self.parent.showTreeOfElements()
-        self.parent.draw_graph()
+        self.parent.canvas.loadGraph(self.graph_name)
+        self.parent.canvas.repaint()
 
     def checkComplete(self) -> bool:
         """Метод проверки корректности измененных данных"""
