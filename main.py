@@ -39,6 +39,7 @@ class Mentor(QMainWindow):
         self.rootNode = self.treeModel.invisibleRootItem()
         self.graph_list.setModel(self.treeModel)
         self.graph_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
+        self.graph_list.selectionModel().selectionChanged.connect(self.selectFromTree)
         # Настройка относительного позиционирования элементов главного окна
         self.splitter.addWidget(self.canvas)
         self.splitter.setSizes([100, 700])
@@ -128,6 +129,12 @@ class Mentor(QMainWindow):
         """Метод для сохранения изменений"""
         # TODO: save changes
         pass
+
+    def selectFromTree(self) -> None:
+        """Выделение тех элементов на холсте, которые были выделены в дереве"""
+        self.canvas.unselect()
+        names = {i.model().itemFromIndex(i).text() for i in self.graph_list.selectedIndexes()}
+        self.canvas.select(names)
 
     def showTreeOfElements(self) -> None:
         """Метод для построения дерева элементов графа"""

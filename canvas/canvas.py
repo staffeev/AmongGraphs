@@ -1,7 +1,7 @@
 import sys
 from PyQt5.QtWidgets import QWidget, QApplication, QMenu, QMessageBox
 from PyQt5.QtGui import QPainter
-from PyQt5.QtCore import Qt
+from PyQt5.QtCore import Qt, QModelIndex
 from settings import DEFAULT_DIST, ZOOM_STEP, DARK_GRAY, MIN_ZOOM, \
     MAX_ZOOM, MAX_CANVAS_SIZE, ARE_YOU_SURE
 from models import db_session
@@ -143,7 +143,21 @@ class Canvas(QWidget):
         self.selected_item = (col, row)
         self.repaint()
 
+    def select(self, names: set[str]):
+        """Выделение элементов графа по их именам (вершины, ребра)"""
+        nodes = [i for i in self.graph_nodes.values() if str(i) in names]
+        ribs = [i for i in self.graph_ribs.values() if i.get_name() in names or i.get_inv_name() in names]
+        self.ctrl_nodes.extend([i for i in nodes if i not in self.ctrl_nodes])
+        for i in ribs:
+            if i.start not in self.ctrl_nodes:
+                self.ctrl_nodes.append(i.start)
+            if i.end not in self.ctrl_nodes:
+                self.ctrl_nodes.append(i.end)
+        [i.select() for i in self.ctrl_nodes]
+        self.repaint()
+
     def unselect(self):
+        """Отмена выделения элементов"""
         [i.unselect() for i in self.ctrl_nodes]
         self.ctrl_nodes = []
         self.repaint()
@@ -275,6 +289,7 @@ class Canvas(QWidget):
         self.repaint()
         session.close()
         self.prnt.showTreeOfElements()
+        self.prnt.graph_list.expandAll()
 
     def changeEdge(self, edge: CanvasEdge):
         """Изменение параметров ребра"""
@@ -301,6 +316,7 @@ class Canvas(QWidget):
         self.unselect()
         self.repaint()
         self.prnt.showTreeOfElements()
+        self.prnt.graph_list.expandAll()
 
     def deleteEdge(self, edges: list[CanvasEdge]):
         """Удаление ребра с холста и из БД по id (берется из edge)"""
@@ -315,9 +331,13 @@ class Canvas(QWidget):
         [session.delete(rib) for rib in ribs]
         session.commit()
         session.close()
-        [self.graph_ribs.pop(i.get_crds()) for i in edges]
+        print([i.get_crds() for i in edges])
+        print(self.graph_ribs )
+        [self.graph_ribs.pop(i.get_crds(), None) for i in edges]
+        [self.graph_ribs.pop(i.get_inv_crds(), None) for i in edges]
         self.repaint()
         self.prnt.showTreeOfElements()
+        self.prnt.graph_list.expandAll()
 
     def getCell(self, x: int, y: int) -> tuple[int, int]:
         """Возвращает индекс клетки в сетке по координатам"""
@@ -331,6 +351,7 @@ class Canvas(QWidget):
         self.loadGraph(self.graph_name)
         self.repaint()
         self.prnt.showTreeOfElements()
+        self.prnt.graph_list.expandAll()
 
     def deleteNode(self, nodes) -> None:
         """Метод для удаления вершины с холста"""
@@ -339,6 +360,7 @@ class Canvas(QWidget):
         self.loadGraph(self.graph_name)
         self.repaint()
         self.prnt.showTreeOfElements()
+        self.prnt.graph_list.expandAll()
 
     def renameNode(self) -> None:
         """Переименование вершины"""
@@ -349,6 +371,7 @@ class Canvas(QWidget):
         self.graph_nodes[row, col].setName(new_name)
         self.repaint()
         self.prnt.showTreeOfElements()
+        self.prnt.graph_list.expandAll()
 
 
 if __name__ == '__main__':

@@ -16,6 +16,12 @@ class CanvasEdge:
         self.start = n1
         self.end = n2
 
+    def get_name(self):
+        return f"{self.start.node_name}-{self.end.node_name}"
+
+    def get_inv_name(self):
+        return f"{self.end.node_name}-{self.start.node_name}"
+
     def swap_nodes(self):
         """Меняет местами вершины"""
         self.start, self.end = self.end, self.start
@@ -61,3 +67,7 @@ class CanvasEdge:
     def get_crds(self):
         """Возвраащет координаты ребра"""
         return self.start.row, self.start.col, self.end.row, self.end.col
+
+    def get_inv_crds(self):
+        """Возвращает первернутые координаты"""
+        return self.end.row, self.end.col, self.start.row, self.start.col

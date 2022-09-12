@@ -13,6 +13,9 @@ class CanvasNode:
         self.row, self.col = node.cell
         self.selected = False
 
+    def __str__(self):
+        return self.node_name
+
     def setName(self, name: str):
         """Установка нового имени"""
         self.node_name = name
