@@ -220,6 +220,10 @@ class Canvas(QWidget):
         menu = QMenu(self)
         if len_selected > 2:
             arg = [(i.row, i.col) for i in self.ctrl_nodes]
+            edges = [i for i in self.graph_ribs.values() if i.start in
+                     self.ctrl_nodes and i.end in self.ctrl_nodes]
+            if edges:
+                menu.addAction('Delete edges', lambda: self.deleteEdge(edges))
             menu.addAction('Delete nodes', lambda: self.deleteNode(arg))
         elif len_selected == 2:
             n1, n2 = self.ctrl_nodes
@@ -227,7 +231,7 @@ class Canvas(QWidget):
             if edge is None:
                 menu.addAction('Add edge', lambda: self.addEdge(n1, n2))
             else:
-                menu.addAction('Delete edge', lambda: self.deleteEdge(edge))
+                menu.addAction('Delete edge', lambda: self.deleteEdge([edge]))
                 menu.addAction('Change edge', lambda: self.changeEdge(edge))
             arg = [(i.row, i.col) for i in self.ctrl_nodes]
             menu.addAction('Delete nodes', lambda: self.deleteNode(arg))
@@ -270,6 +274,7 @@ class Canvas(QWidget):
             self.graph_ribs[n1.row, n1.col, n2.row, n2.col] = CanvasEdge(n1, n2, rib, self)
         self.repaint()
         session.close()
+        self.prnt.showTreeOfElements()
 
     def changeEdge(self, edge: CanvasEdge):
         """Изменение параметров ребра"""
@@ -295,22 +300,24 @@ class Canvas(QWidget):
         session.close()
         self.unselect()
         self.repaint()
+        self.prnt.showTreeOfElements()
 
-    def deleteEdge(self, edge: CanvasEdge):
+    def deleteEdge(self, edges: list[CanvasEdge]):
         """Удаление ребра с холста и из БД по id (берется из edge)"""
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
-        rib = graph.get_rib_by_id(edge.id)
+        ribs = [i for i in graph.ribs.values() if i.id in map(lambda x: x.id, edges)]
         flag = QMessageBox.question(
-            self, 'Delete edge', f'{ARE_YOU_SURE} edge {str(rib)}')
+            self, 'Delete edge', f'{ARE_YOU_SURE} edges {", ".join(map(str, ribs))}')
         if flag != QMessageBox.Yes:
             session.close()
             return
-        session.delete(rib)
+        [session.delete(rib) for rib in ribs]
         session.commit()
         session.close()
-        self.graph_ribs.pop(edge.get_crds())
+        [self.graph_ribs.pop(i.get_crds()) for i in edges]
         self.repaint()
+        self.prnt.showTreeOfElements()
 
     def getCell(self, x: int, y: int) -> tuple[int, int]:
         """Возвращает индекс клетки в сетке по координатам"""
@@ -323,6 +330,7 @@ class Canvas(QWidget):
         add_node(self.graph_name, self.last_cell)
         self.loadGraph(self.graph_name)
         self.repaint()
+        self.prnt.showTreeOfElements()
 
     def deleteNode(self, nodes) -> None:
         """Метод для удаления вершины с холста"""
@@ -330,6 +338,7 @@ class Canvas(QWidget):
             return
         self.loadGraph(self.graph_name)
         self.repaint()
+        self.prnt.showTreeOfElements()
 
     def renameNode(self) -> None:
         """Переименование вершины"""
@@ -339,6 +348,7 @@ class Canvas(QWidget):
             return
         self.graph_nodes[row, col].setName(new_name)
         self.repaint()
+        self.prnt.showTreeOfElements()
 
 
 if __name__ == '__main__':

@@ -8,7 +8,7 @@ from forms.edge_list import EdgeList
 from forms.matrix import GraphMatrix
 from models.graph import Graph
 from functions import get_graph_names, get_graph_by_name
-from PyQt5.Qt import QStandardItemModel
+from PyQt5.Qt import QStandardItemModel, QAbstractItemView
 from PyQt5 import uic
 from PyQt5.QtGui import QCloseEvent
 from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox
@@ -30,7 +30,7 @@ class Mentor(QMainWindow):
         self.graph_name = None
         self.window = None
         self.image = None
-        self.canvas = Canvas()
+        self.canvas = Canvas(parent=self)
         self.initUI()
 
     def initUI(self) -> None:
@@ -38,6 +38,7 @@ class Mentor(QMainWindow):
         self.treeModel = QStandardItemModel()
         self.rootNode = self.treeModel.invisibleRootItem()
         self.graph_list.setModel(self.treeModel)
+        self.graph_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
         # Настройка относительного позиционирования элементов главного окна
         self.splitter.addWidget(self.canvas)
         self.splitter.setSizes([100, 700])
@@ -136,10 +137,10 @@ class Mentor(QMainWindow):
         self.treeModel.setHorizontalHeaderItem(
             0, TreeItem(self.graph_name, bold=True)
         )
-        nodes = TreeItem("Vertexes")
+        nodes = TreeItem("Nodes")
         nodes.appendRows([TreeItem(v.name, 8) for v in graph.nodes])
         ribs = TreeItem("Ribs")
-        ribs.appendRows([TreeItem(str(r), 8) for r in graph.ribs])
+        ribs.appendRows([TreeItem(str(r), 8) for r in graph.ribs.values()])
         self.rootNode.appendRows([nodes, ribs])
         session.close()
 
