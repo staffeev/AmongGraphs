@@ -49,7 +49,7 @@ class Mentor(QMainWindow):
         self.actionCreate.triggered.connect(self.createGraph)
         self.actionOpen.triggered.connect(self.openGraph)
         self.actionDelete.triggered.connect(self.deleteGraph)
-        self.actionSave.triggered.connect(self.saveChanges)
+        # self.actionSave.triggered.connect(self.saveChanges)
         self.actionExit.triggered.connect(self.close)
         self.actionEdit_matrix.triggered.connect(self.openWindow)
         self.actionEdit_list.triggered.connect(self.openWindow)
