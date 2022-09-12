@@ -303,6 +303,8 @@ class Canvas(QWidget):
         self.colorizeNodes()
         self.repaint()
         session.close()
+        if self.prnt.window is not None:
+            self.prnt.window.loadTable()
         self.prnt.showTreeOfElements()
         self.prnt.graph_list.expandAll()
 
@@ -330,6 +332,8 @@ class Canvas(QWidget):
         session.close()
         self.unselect()
         self.repaint()
+        if self.prnt.window is not None:
+            self.prnt.window.loadTable()
         self.prnt.showTreeOfElements()
         self.prnt.graph_list.expandAll()
 
@@ -352,6 +356,8 @@ class Canvas(QWidget):
         [self.graph_ribs.pop(i.get_inv_crds(), None) for i in edges]
         self.colorizeNodes()
         self.repaint()
+        if self.prnt.window is not None:
+            self.prnt.window.loadTable()
         self.prnt.showTreeOfElements()
         self.prnt.graph_list.expandAll()
 
@@ -366,6 +372,8 @@ class Canvas(QWidget):
         add_node(self.graph_name, self.last_cell)
         self.loadGraph(self.graph_name)
         self.repaint()
+        if self.prnt.window is not None:
+            self.prnt.window.loadTable()
         self.prnt.showTreeOfElements()
         self.prnt.graph_list.expandAll()
 
@@ -375,6 +383,8 @@ class Canvas(QWidget):
             return
         self.loadGraph(self.graph_name)
         self.repaint()
+        if self.prnt.window is not None:
+            self.prnt.window.loadTable()
         self.prnt.showTreeOfElements()
         self.prnt.graph_list.expandAll()
 
@@ -386,6 +396,8 @@ class Canvas(QWidget):
             return
         self.graph_nodes[row, col].setName(new_name)
         self.repaint()
+        if self.prnt.window is not None:
+            self.prnt.window.loadTable()
         self.prnt.showTreeOfElements()
         self.prnt.graph_list.expandAll()
 

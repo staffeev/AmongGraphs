@@ -130,7 +130,6 @@ class GraphMatrix(QWidget):
         if len(count_rows) > len(count_cols):
             return count_rows - count_cols
         return count_cols - count_rows
-        # return self.countSelected(sel_rows) - self.countSelected(sel_cols)
 
     def countSelected(self, values: dict[int]) -> set[int]:
         """Метод, возвращающий полностью выделенные строки (столбцы) таблицы"""
@@ -167,7 +166,6 @@ class GraphMatrix(QWidget):
     def deleteNode(self) -> None:
         """Метод для удаления вершины из графа"""
         selected = self.getSelectedRowsOrCols()
-        print(selected)
         if not selected:
             return
         delete_node(self, self.graph_name, selected)
