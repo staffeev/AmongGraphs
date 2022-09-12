@@ -53,7 +53,7 @@ class Mentor(QMainWindow):
         self.actionExit.triggered.connect(self.close)
         self.actionEdit_matrix.triggered.connect(self.openWindow)
         self.actionEdit_list.triggered.connect(self.openWindow)
-        self.actionDraw.triggered.connect(self.canvas.repaint)
+        self.actionDraw.triggered.connect(lambda: self.canvas.loadGraph(self.graph_name))
         self.actionLoad_csv.triggered.connect(self.addCsv)
         # Остальные события
 
@@ -121,6 +121,7 @@ class Mentor(QMainWindow):
         session.commit()
         if graph.name == self.graph_name:
             self.clearTree()
+            self.canvas.clear()
         if self.window is not None:
             self.window.close()
         session.close()

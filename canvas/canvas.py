@@ -34,6 +34,18 @@ class Canvas(QWidget):
         self.ctrl_nodes = []
         self.last_cell = None
 
+    def clear(self):
+        """Очистка холста"""
+        self.graph_nodes = {}
+        self.graph_name = None
+        self.graph_ribs = {}
+        self.node_selected = False
+        self.last_cell = None
+        self.ctrl_nodes = []
+        self.selected_item = None
+        self.move_canvas = False
+        self.repaint()
+
     def loadGraph(self, name) -> None:
         """Загрузка данных из графа"""
         # TODO
