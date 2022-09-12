@@ -65,6 +65,7 @@ class Canvas(QWidget):
             n2 = self.graph_nodes[rib.nodes[1].cell]
             self.graph_ribs[rib.get_crds()] = CanvasEdge(n1, n2, rib, self)
         session.close()
+        self.unselect()
         self.colorizeNodes()
         self.repaint()
 
@@ -255,6 +256,7 @@ class Canvas(QWidget):
             menu.addAction('Delete nodes', lambda: self.deleteNode(arg))
         elif len_selected == 2:
             n1, n2 = self.ctrl_nodes
+            print(n1.node_name, n2.node_name)
             edge = self.getEdge(n1.row, n1.col, n2.row, n2.col)
             if edge is None:
                 menu.addAction('Add edge', lambda: self.addEdge(n1, n2))
@@ -276,6 +278,8 @@ class Canvas(QWidget):
         """Возвращает ребро по координатам"""
         crds1 = row1, col1, row2, col2
         crds2 = row2, col2, row1, col1
+        print(crds1, crds2)
+        print(self.graph_ribs)
         return self.graph_ribs.get(crds1, self.graph_ribs.get(crds2, None))
 
     def addEdge(self, n1: CanvasNode, n2: CanvasNode):
