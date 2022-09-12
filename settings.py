@@ -10,6 +10,7 @@ GREEN = QColor("green")
 GRAY = QColor(192, 192, 192)
 DARK_GRAY = QColor(128, 128, 128)
 # Фразы для сообщений
+CANNOT_CONTAIN_SYMBOL = "Input data cannot contain symbol '-' (hyphen)"
 CANNOT_ADD = "You cannot add a new row until you input data in last one"
 NO_GRAPHS_WITH_NAME = "There are no graphs with this name"
 NOT_SELECTED = "You have not selected the graph"
