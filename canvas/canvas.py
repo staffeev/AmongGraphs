@@ -29,11 +29,17 @@ class Canvas(QWidget):
         self.dif_x = self.dif_y = 0
         self.node_selected = False
         self.x = self.y = 0
+        self.center = [self.size().width() // 2, self.size().height() // 2]
         self.graph_nodes = {}
         self.graph_ribs = {}
         self.selected_item = None
         self.ctrl_nodes = []
         self.last_cell = None
+
+    def centerCanvas(self, x: int, y: int):
+        """Центрирование холста"""
+        self.x = x - self.dist * self.rows // 2
+        self.y = y - self.dist * self.cols // 2
 
     def clear(self):
         """Очистка холста"""
@@ -49,7 +55,6 @@ class Canvas(QWidget):
 
     def loadGraph(self, name) -> None:
         """Загрузка данных из графа"""
-        # TODO
         if name is None:
             return
         self.selected_item = None
@@ -135,11 +140,13 @@ class Canvas(QWidget):
 
     def wheelEvent(self, event) -> None:
         """Изменение масштаба холста посредством кручения колеса мыши"""
+        x, y = self.x + self.getWidth() // 2, self.y + self.getHeight() // 2
         if event.angleDelta().y() > 0:
             self.zoom = min(self.zoom * ZOOM_STEP, MAX_ZOOM)
         else:
             self.zoom = max(self.zoom / ZOOM_STEP, MIN_ZOOM)
         self.calcDist()
+        self.centerCanvas(x, y)
         self.checkBorders()
         self.repaint()
 
