@@ -68,7 +68,7 @@ class Canvas(QWidget):
         for rib in graph.ribs.values():
             n1 = self.graph_nodes[rib.nodes[0].cell]
             n2 = self.graph_nodes[rib.nodes[1].cell]
-            self.graph_ribs[rib.get_crds()] = CanvasEdge(n1, n2, rib, self)
+            self.graph_ribs[n1, n2] = CanvasEdge(n1, n2, rib, self)
         session.close()
         self.unselect()
         self.colorizeNodes()
@@ -264,7 +264,7 @@ class Canvas(QWidget):
         elif len_selected == 2:
             n1, n2 = self.ctrl_nodes
             print(n1.node_name, n2.node_name)
-            edge = self.getEdge(n1.row, n1.col, n2.row, n2.col)
+            edge = self.getEdge(n1, n2)
             if edge is None:
                 menu.addAction('Add edge', lambda: self.addEdge(n1, n2))
             else:
@@ -281,13 +281,9 @@ class Canvas(QWidget):
             menu.addAction('Add node', self.addNode)
         menu.exec_(self.mapToGlobal(event.pos()))
 
-    def getEdge(self, row1: int, col1: int, row2: int, col2: int) -> CanvasEdge:
+    def getEdge(self, n1: CanvasNode, n2: CanvasNode) -> CanvasEdge:
         """Возвращает ребро по координатам"""
-        crds1 = row1, col1, row2, col2
-        crds2 = row2, col2, row1, col1
-        print(crds1, crds2)
-        print(self.graph_ribs)
-        return self.graph_ribs.get(crds1, self.graph_ribs.get(crds2, None))
+        return self.graph_ribs.get((n1, n2), self.graph_ribs.get((n2, n1), None))
 
     def addEdge(self, n1: CanvasNode, n2: CanvasNode):
         """Добавление ребра"""
@@ -308,9 +304,9 @@ class Canvas(QWidget):
         session.add(rib)
         session.commit()
         if form.radio2.isChecked():
-            self.graph_ribs[n2.row, n2.col, n1.row, n1.col] = CanvasEdge(n2, n1, rib, self)
+            self.graph_ribs[n2, n1] = CanvasEdge(n2, n1, rib, self)
         else:
-            self.graph_ribs[n1.row, n1.col, n2.row, n2.col] = CanvasEdge(n1, n2, rib, self)
+            self.graph_ribs[n1, n2] = CanvasEdge(n1, n2, rib, self)
         self.colorizeNodes()
         self.repaint()
         session.close()
@@ -361,10 +357,8 @@ class Canvas(QWidget):
         [session.delete(rib) for rib in ribs]
         session.commit()
         session.close()
-        print([i.get_crds() for i in edges])
-        print(self.graph_ribs )
-        [self.graph_ribs.pop(i.get_crds(), None) for i in edges]
-        [self.graph_ribs.pop(i.get_inv_crds(), None) for i in edges]
+        to_pop = [i for i in self.graph_ribs if self.graph_ribs[i] in edges]
+        [self.graph_ribs.pop(i, None) for i in to_pop]
         self.colorizeNodes()
         self.repaint()
         if self.prnt.window is not None:

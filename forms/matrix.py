@@ -34,6 +34,11 @@ class GraphMatrix(QWidget):
         self.matrix.horizontalHeader().sectionDoubleClicked.connect(self.renameNode)
         self.matrix.verticalHeader().sectionDoubleClicked.connect(self.renameNode)
 
+    def changeGraph(self, graph_name):
+        """Меняет граф"""
+        self.graph_name = graph_name
+        self.loadTable()
+
     def stretchTable(self) -> None:
         """Метод, растягивающий таблицу на всю допустимую ширину и высоту"""
         h_header = self.matrix.horizontalHeader()

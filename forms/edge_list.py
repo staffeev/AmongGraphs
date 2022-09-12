@@ -35,6 +35,11 @@ class EdgeList(QWidget):
         self.table.selectionModel().selectionChanged.connect(
             self.checkUnselected)
 
+    def changeGraph(self, graph_name):
+        """Меняет граф"""
+        self.graph_name = graph_name
+        self.loadTable()
+
     def checkUnselected(self, _, unselected) -> bool:
         """Обработчик валидности невыделенных ячеек"""
         if len(unselected.indexes()) != 1:

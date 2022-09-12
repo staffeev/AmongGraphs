@@ -109,6 +109,8 @@ class Mentor(QMainWindow):
         self.graph_name = graph.name
         self.showTreeOfElements()
         self.canvas.loadGraph(graph.name)
+        if self.window is not None and not self.window.isHidden():
+            self.window.changeGraph(self.graph_name)
         session.close()
 
     def deleteGraph(self, name=None) -> None:
