@@ -135,6 +135,7 @@ class GraphMatrix(QWidget):
         add_node(self.graph_name)
         self.expandTable()
         self.updateTableForm()
+        self.parent.canvas.loadGraph(self.graph_name)
 
     def addCoupleNodes(self, names) -> None:
         """Добавления нескольких вершин в граф"""
@@ -147,6 +148,7 @@ class GraphMatrix(QWidget):
         session.close()
         self.expandTable(len(nodes))
         self.updateTableForm()
+        self.parent.canvas.loadGraph(self.graph_name)
 
     def expandTable(self, cnt=1) -> None:
         """Метод, расширяющий матрицу на одну строку и один столбец"""
@@ -161,6 +163,7 @@ class GraphMatrix(QWidget):
         if not selected:
             return
         delete_node(self, self.graph_name, selected)
+        self.parent.canvas.loadGraph(self.graph_name)
         self.loadTable()
 
     def save(self):

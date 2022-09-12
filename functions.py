@@ -99,7 +99,7 @@ def delete_node(parent, graph_name: str, selected: Union[list[tuple], set[int]])
     """Функция для удаления вершин из графа"""
     session = db_session.create_session()
     graph = get_graph_by_name(session, graph_name)
-    if isinstance(session, set):
+    if isinstance(selected, set):
         nodes = [graph.nodes[i] for i in selected]
     else:
         nodes = [i for i in graph.nodes if i.cell in selected]
