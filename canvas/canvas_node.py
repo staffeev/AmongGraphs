@@ -10,11 +10,15 @@ class CanvasNode:
         self.parent = parent
         self.node_id = node.id
         self.node_name = node.name
+        self.color = RED
         self.row, self.col = node.cell
         self.selected = False
 
     def __str__(self):
         return self.node_name
+
+    def setColor(self, color):
+        self.color = color
 
     def setName(self, name: str):
         """Установка нового имени"""
@@ -36,7 +40,7 @@ class CanvasNode:
         x, y = self.parent.getPoint(self.row, self.col)
         font = QFont()
         font.setPixelSize(dist // 2)
-        self.parent.qp.setBrush(SELECTED_ITEM_COLOR if self.selected else RED)
+        self.parent.qp.setBrush(SELECTED_ITEM_COLOR if self.selected else self.color)
         self.parent.qp.setPen(BLACK)
         self.parent.qp.setFont(font)
         self.parent.qp.drawEllipse(x, y, dist, dist)

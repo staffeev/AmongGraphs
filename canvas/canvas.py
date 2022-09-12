@@ -1,7 +1,8 @@
 import sys
+from colour import Color
 from PyQt5.QtWidgets import QWidget, QApplication, QMenu, QMessageBox
-from PyQt5.QtGui import QPainter
-from PyQt5.QtCore import Qt, QModelIndex
+from PyQt5.QtGui import QPainter, QColor
+from PyQt5.QtCore import Qt
 from settings import DEFAULT_DIST, ZOOM_STEP, DARK_GRAY, MIN_ZOOM, \
     MAX_ZOOM, MAX_CANVAS_SIZE, ARE_YOU_SURE
 from models import db_session
@@ -64,6 +65,7 @@ class Canvas(QWidget):
             n2 = self.graph_nodes[rib.nodes[1].cell]
             self.graph_ribs[rib.get_crds()] = CanvasEdge(n1, n2, rib, self)
         session.close()
+        self.colorizeNodes()
         self.repaint()
 
     def paintEvent(self, event) -> None:
@@ -298,6 +300,7 @@ class Canvas(QWidget):
             self.graph_ribs[n2.row, n2.col, n1.row, n1.col] = CanvasEdge(n2, n1, rib, self)
         else:
             self.graph_ribs[n1.row, n1.col, n2.row, n2.col] = CanvasEdge(n1, n2, rib, self)
+        self.colorizeNodes()
         self.repaint()
         session.close()
         self.prnt.showTreeOfElements()
@@ -347,6 +350,7 @@ class Canvas(QWidget):
         print(self.graph_ribs )
         [self.graph_ribs.pop(i.get_crds(), None) for i in edges]
         [self.graph_ribs.pop(i.get_inv_crds(), None) for i in edges]
+        self.colorizeNodes()
         self.repaint()
         self.prnt.showTreeOfElements()
         self.prnt.graph_list.expandAll()
@@ -384,6 +388,20 @@ class Canvas(QWidget):
         self.repaint()
         self.prnt.showTreeOfElements()
         self.prnt.graph_list.expandAll()
+
+    def colorizeNodes(self):
+        """Раскрашивание вершин в зависимости от количества связей"""
+        session = db_session.create_session()
+        graph = get_graph_by_name(session, self.graph_name)
+        d_colors = {}
+        for node in graph.nodes:
+            d_colors[node.cell] = len(node.ribs)
+        colors = list(Color('green').range_to(Color('red'),
+                                              max(d_colors.values()) + 1))
+        for cell in self.graph_nodes:
+            num = d_colors[cell]
+            self.graph_nodes[cell].setColor(QColor(colors[num].hex))
+        session.close()
 
 
 if __name__ == '__main__':
