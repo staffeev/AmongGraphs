@@ -1,6 +1,6 @@
 from PyQt5.QtWidgets import QDialog, QDialogButtonBox, QVBoxLayout, QLabel, \
     QLineEdit, QMessageBox
-from settings import ALREADY_EXISTS, EMPTY
+from settings import ALREADY_EXISTS, EMPTY, CANNOT_CONTAIN_SYMBOL
 
 
 class AddNewData(QDialog):
@@ -28,5 +28,7 @@ class AddNewData(QDialog):
             QMessageBox.warning(self, "Warning", EMPTY)
         elif self.inputData.text() in self.names:
             QMessageBox.critical(self, "Error", ALREADY_EXISTS)
+        elif '-' in self.inputData.text():
+            QMessageBox.warning(self, 'Warning', CANNOT_CONTAIN_SYMBOL)
         else:
             self.done(1)

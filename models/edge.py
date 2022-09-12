@@ -52,9 +52,16 @@ class Rib(SqlAlchemyBase):
         self.nodes.append(start)
         self.nodes.append(end)
 
+    def clear_nodes(self):
+        """Убирает вершины из ребра"""
+        n1, n2 = self.nodes
+        self.nodes.remove(n1)
+        self.nodes.remove(n2)
+
     def swap_nodes(self) -> None:
         """Меняет местами вершины ребра"""
-        self.nodes = [self.nodes[1], self.nodes[0]]
+        n1, n2 = self.nodes
+        self.replace_nodes(p1=n2, p2=n1)
 
     def change_weight(self, value: float) -> None:
         """Метод для изменения веса ребра"""

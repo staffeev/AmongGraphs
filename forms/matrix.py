@@ -123,7 +123,13 @@ class GraphMatrix(QWidget):
         for el in self.matrix.selectedIndexes():
             sel_rows[el.row()] = sel_rows.get(el.row(), 0) + 1
             sel_cols[el.column()] = sel_cols.get(el.column(), 0) + 1
-        return self.countSelected(sel_rows) | self.countSelected(sel_cols)
+        count_rows = self.countSelected(sel_rows)
+        count_cols = self.countSelected(sel_cols)
+        if len(count_rows) == len(count_cols):
+            return count_rows
+        if len(count_rows) > len(count_cols):
+            return count_rows - count_cols
+        return count_cols - count_rows
 
     def countSelected(self, values: dict[int]) -> set[int]:
         """Метод, возвращающий полностью выделенные строки (столбцы) таблицы"""

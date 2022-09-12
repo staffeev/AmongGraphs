@@ -82,8 +82,6 @@
     <property name="title">
      <string>Edit</string>
     </property>
-    <addaction name="actionUndo"/>
-    <addaction name="separator"/>
     <addaction name="actionEdit_matrix"/>
     <addaction name="actionEdit_list"/>
     <addaction name="separator"/>
@@ -111,10 +109,8 @@
     <addaction name="actionOpen"/>
     <addaction name="actionDelete"/>
     <addaction name="separator"/>
-    <addaction name="actionSave"/>
     <addaction name="menuSave_as"/>
     <addaction name="separator"/>
-    <addaction name="actionSettings"/>
     <addaction name="actionExit"/>
    </widget>
    <widget class="QMenu" name="menuDraw">

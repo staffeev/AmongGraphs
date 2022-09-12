@@ -29,11 +29,17 @@ class Canvas(QWidget):
         self.dif_x = self.dif_y = 0
         self.node_selected = False
         self.x = self.y = 0
+        self.center = [self.size().width() // 2, self.size().height() // 2]
         self.graph_nodes = {}
         self.graph_ribs = {}
         self.selected_item = None
         self.ctrl_nodes = []
         self.last_cell = None
+
+    def centerCanvas(self, x: int, y: int):
+        """Центрирование холста"""
+        self.x = x - self.dist * self.rows // 2
+        self.y = y - self.dist * self.cols // 2
 
     def clear(self):
         """Очистка холста"""
@@ -49,7 +55,6 @@ class Canvas(QWidget):
 
     def loadGraph(self, name) -> None:
         """Загрузка данных из графа"""
-        # TODO
         if name is None:
             return
         self.selected_item = None
@@ -65,6 +70,7 @@ class Canvas(QWidget):
             n2 = self.graph_nodes[rib.nodes[1].cell]
             self.graph_ribs[rib.get_crds()] = CanvasEdge(n1, n2, rib, self)
         session.close()
+        self.unselect()
         self.colorizeNodes()
         self.repaint()
 
@@ -134,11 +140,13 @@ class Canvas(QWidget):
 
     def wheelEvent(self, event) -> None:
         """Изменение масштаба холста посредством кручения колеса мыши"""
+        x, y = self.x + self.getWidth() // 2, self.y + self.getHeight() // 2
         if event.angleDelta().y() > 0:
             self.zoom = min(self.zoom * ZOOM_STEP, MAX_ZOOM)
         else:
             self.zoom = max(self.zoom / ZOOM_STEP, MIN_ZOOM)
         self.calcDist()
+        self.centerCanvas(x, y)
         self.checkBorders()
         self.repaint()
 
@@ -255,6 +263,7 @@ class Canvas(QWidget):
             menu.addAction('Delete nodes', lambda: self.deleteNode(arg))
         elif len_selected == 2:
             n1, n2 = self.ctrl_nodes
+            print(n1.node_name, n2.node_name)
             edge = self.getEdge(n1.row, n1.col, n2.row, n2.col)
             if edge is None:
                 menu.addAction('Add edge', lambda: self.addEdge(n1, n2))
@@ -276,6 +285,8 @@ class Canvas(QWidget):
         """Возвращает ребро по координатам"""
         crds1 = row1, col1, row2, col2
         crds2 = row2, col2, row1, col1
+        print(crds1, crds2)
+        print(self.graph_ribs)
         return self.graph_ribs.get(crds1, self.graph_ribs.get(crds2, None))
 
     def addEdge(self, n1: CanvasNode, n2: CanvasNode):
@@ -303,6 +314,8 @@ class Canvas(QWidget):
         self.colorizeNodes()
         self.repaint()
         session.close()
+        if self.prnt.window is not None:
+            self.prnt.window.loadTable()
         self.prnt.showTreeOfElements()
         self.prnt.graph_list.expandAll()
 
@@ -330,6 +343,8 @@ class Canvas(QWidget):
         session.close()
         self.unselect()
         self.repaint()
+        if self.prnt.window is not None:
+            self.prnt.window.loadTable()
         self.prnt.showTreeOfElements()
         self.prnt.graph_list.expandAll()
 
@@ -352,6 +367,8 @@ class Canvas(QWidget):
         [self.graph_ribs.pop(i.get_inv_crds(), None) for i in edges]
         self.colorizeNodes()
         self.repaint()
+        if self.prnt.window is not None:
+            self.prnt.window.loadTable()
         self.prnt.showTreeOfElements()
         self.prnt.graph_list.expandAll()
 
@@ -366,6 +383,8 @@ class Canvas(QWidget):
         add_node(self.graph_name, self.last_cell)
         self.loadGraph(self.graph_name)
         self.repaint()
+        if self.prnt.window is not None:
+            self.prnt.window.loadTable()
         self.prnt.showTreeOfElements()
         self.prnt.graph_list.expandAll()
 
@@ -375,6 +394,8 @@ class Canvas(QWidget):
             return
         self.loadGraph(self.graph_name)
         self.repaint()
+        if self.prnt.window is not None:
+            self.prnt.window.loadTable()
         self.prnt.showTreeOfElements()
         self.prnt.graph_list.expandAll()
 
@@ -386,6 +407,8 @@ class Canvas(QWidget):
             return
         self.graph_nodes[row, col].setName(new_name)
         self.repaint()
+        if self.prnt.window is not None:
+            self.prnt.window.loadTable()
         self.prnt.showTreeOfElements()
         self.prnt.graph_list.expandAll()
 
@@ -396,6 +419,8 @@ class Canvas(QWidget):
         d_colors = {}
         for node in graph.nodes:
             d_colors[node.cell] = len(node.ribs)
+        if not d_colors:
+            return
         colors = list(Color('green').range_to(Color('red'),
                                               max(d_colors.values()) + 1))
         for cell in self.graph_nodes:
