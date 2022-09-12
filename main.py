@@ -53,9 +53,16 @@ class Mentor(QMainWindow):
         self.actionExit.triggered.connect(self.close)
         self.actionEdit_matrix.triggered.connect(self.openWindow)
         self.actionEdit_list.triggered.connect(self.openWindow)
-        self.actionDraw.triggered.connect(lambda: self.canvas.loadGraph(self.graph_name))
+        self.actionDraw.triggered.connect(self.draw)
         self.actionLoad_csv.triggered.connect(self.addCsv)
         # Остальные события
+
+    def draw(self):
+        """Вызывает отрисовку холста с графом"""
+        if self.graph_name is not None:
+            self.canvas.loadGraph(self.graph_name)
+        else:
+            QMessageBox.warning(self, "Warning", NOT_OPEN)
 
     def openWindow(self) -> None:
         """Обработчик открытия новых окон"""
