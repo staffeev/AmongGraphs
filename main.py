@@ -203,6 +203,7 @@ class Mentor(QMainWindow):
 if __name__ == '__main__':
     db_session.global_init('graphs.db')
     app = QApplication(sys.argv)
+    app.setStyle('fusion')
     programme = Mentor()
     programme.show()
     sys.excepthook = except_hook
