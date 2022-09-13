@@ -15,13 +15,6 @@ class Graph(SqlAlchemyBase):
     serialize_rules = ('-ribs', '-nodes', '-chains')
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, nullable=False, unique=True, index=True)
-    num_of_vertexes = Column(Integer)
-    num_of_ribs = Column(Integer)
-    num_of_cutpoints = Column(Integer)
-    num_of_bridges = Column(Integer)
-    num_of_cycles = Column(Integer)
-    num_of_strong_components = Column(Integer)
-    min_cost_way = Column(Integer, default=inf)
     is_directed = Column(Boolean, default=False)
     is_connected = Column(Boolean, default=False)
     nodes = relation("Vertex", backref="graph", cascade="all, delete-orphan")
@@ -98,3 +91,19 @@ class Graph(SqlAlchemyBase):
     def get_occupied_cells(self) -> set[tuple[int, int]]:
         """Возвращает список занятых в холсте клеток"""
         return {i.cell for i in self.nodes}
+
+    def get_cutpoints(self) -> list[Vertex]:
+        """Возвращает все точки сочленения"""
+        return [i for i in self.nodes if i.is_cutpoint]
+
+    def get_bridges(self) -> list[Rib]:
+        """Возвращает все мосты"""
+        return [i for i in self.ribs if i.is_bridge]
+
+    def get_cycles(self) -> list[Chain]:
+        """Возвращает все циклы"""
+        return [i for i in self.chains if i.is_cycle]
+
+    def get_components(self) -> list[Chain]:
+        """Возвращает все компоненты сильной связности"""
+        return [i for i in self.chains if i.is_component]
