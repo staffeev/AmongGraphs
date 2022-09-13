@@ -1,7 +1,11 @@
+import networkx.exception
+
 from functions import create_ribs, get_graph_by_name
 from models import db_session
 from networkx import DiGraph, simple_cycles, articulation_points, bridges, \
     strongly_connected_components, is_strongly_connected
+from models.cycle import Cycle
+from models.component import Component
 
 
 class PropertyDefiner:
@@ -51,7 +55,10 @@ class PropertyDefiner:
         """Определение того, является ли граф сильно связным"""
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
-        graph.is_connected = is_strongly_connected(self.graph)
+        try:
+            graph.is_connected = is_strongly_connected(self.graph)
+        except networkx.exception.NetworkXPointlessConcept:
+            pass
         session.commit()
         session.close()
 
@@ -86,12 +93,46 @@ class PropertyDefiner:
     def find_cycles(self):
         """Определение циклов"""
         cycles = list(simple_cycles(self.graph))
+        if not cycles:
+            return
+        session = db_session.create_session()
+        graph = get_graph_by_name(session, self.graph_name)
+        g_cycles = graph.cycles
+        [session.delete(c) for c in g_cycles]
+        for c in cycles:
+            cycle = Cycle()
+            for j in range(1, len(c) - 1):
+                rib = graph.get_rib_by_nodes(c[j - 1], c[j])
+                if rib is None:
+                    rib = graph.get_rib_by_nodes(c[j], c[j - 1])
+                cycle.add_ribs(rib)
+            graph.add_cycles(cycle)
+            session.add(cycle)
+            print(cycle.ribs)
+        print(cycle.ribs)
+        session.commit()
+        session.close()
         print(cycles)
         # TODO
 
     def find_components(self):
         """Определение компонент сильной связности"""
         comps = list(strongly_connected_components(self.graph))
+        if not comps:
+            return
+        session = db_session.create_session()
+        graph = get_graph_by_name(session, self.graph_name)
+        g_comps = graph.components
+        [session.delete(c) for c in g_comps]
+        for c in comps:
+            comp = Component()
+            nodes = graph.get_nodes_by_name(*c)
+            comp.add_nodes(nodes)
+            graph.add_comps(comp)
+            session.add(comp)
+        session.commit()
+        session.close()
+
         print(comps)
         # TODO
 

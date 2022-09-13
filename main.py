@@ -189,9 +189,9 @@ class Mentor(QMainWindow):
         bridges = TreeItem("Bridges")
         bridges.appendRows([TreeItem(str(b), 8) for b in graph.get_bridges()])
         cycles = TreeItem("Cycles")
-        cycles.appendRows([TreeItem(str(cy), 8) for cy in graph.get_cycles()])
+        cycles.appendRows([TreeItem(str(cy), 8) for cy in graph.cycles])
         components = TreeItem("Components")
-        components.appendRows([TreeItem(str(cmp), 8) for cmp in graph.get_components()])
+        components.appendRows([TreeItem(str(cmp), 8) for cmp in graph.components])
         self.rootNode.appendRows([nodes, ribs, cutpoints, bridges, cycles, components])
         session.close()
 

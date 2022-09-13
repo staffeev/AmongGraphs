@@ -6,7 +6,8 @@ from math import inf
 from typing import Union
 from models.node import Vertex
 from models.edge import Rib
-from models.cycle import Chain
+from models.cycle import Cycle
+from models.component import Component
 
 
 class Graph(SqlAlchemyBase):
@@ -20,7 +21,8 @@ class Graph(SqlAlchemyBase):
     nodes = relation("Vertex", backref="graph", cascade="all, delete-orphan")
     ribs = relation("Rib", backref="graph", cascade="all, delete-orphan",
                     collection_class=attribute_mapped_collection("key"))
-    chains = relation("Chain", backref="graph", cascade="all, delete-orphan")
+    cycles = relation("Cycle", backref="graph", cascade="all, delete-orphan")
+    components = relation("Component", backref="graph", cascade="all, delete-orphan")
 
     def add_nodes(self, *vertexes: Vertex) -> None:
         """Метод добавления вершин в граф"""
@@ -39,13 +41,18 @@ class Graph(SqlAlchemyBase):
             if vert not in self.nodes
         ])
 
-    def add_chains(self, *chains: Chain) -> None:
-        """Метод добавления цепей в граф"""
-        [self.chains.append(chain) for chain in chains if chain not in self.chains]
-        self.add_ribs(*[
-            rib for rib in {j for i in chains for j in i.ribs}
-            if rib not in self.ribs
-        ])
+    def add_cycles(self, *cycles: Cycle) -> None:
+        """Метод добавления циклов в граф"""
+        [self.cycles.append(cycle) for cycle in cycles if cycle not in self.cycles]
+        # self.add_ribs(*[
+        #     rib for rib in {j for i in cycles for j in i.ribs}
+        #     if rib not in self.ribs.values()
+        # ])
+
+    def add_comps(self, *comps: Component) -> None:
+        """Добавляет компоненты в граф"""
+        [self.components.append(comp) for comp in comps if comp not in self.components]
+        # self.add_nodes(*[n for n in {j for i in comps for j in i.nodes}])
 
     def get_nodes(self) -> list[str]:
         """Метод, возвращающий список имен вершин графа"""
@@ -100,14 +107,6 @@ class Graph(SqlAlchemyBase):
         """Возвращает все мосты"""
         return [i for i in self.ribs.values() if i.is_bridge]
 
-    def get_cycles(self) -> list[Chain]:
-        """Возвращает все циклы"""
-        return [i for i in self.chains if i.is_cycle]
-
-    def get_components(self) -> list[Chain]:
-        """Возвращает все компоненты сильной связности"""
-        return [i for i in self.chains if i.is_component]
-
     def check_directed(self):
         """Определение того, является ли граф ориентированным"""
         if any([x.is_directed for x in self.ribs.values()]):
@@ -125,15 +124,13 @@ class Graph(SqlAlchemyBase):
 
     def clear_cycles(self):
         """Убирает метку цикла с таковых цепей"""
-        [i.set_cycle(False) for i in self.get_cycles()]
+        self.cycles = []
 
     def clear_components(self):
         """Убирает метку компоненты с таковых цепей"""
-        [i.set_component(False) for i in self.get_components()]
+        self.components = []
 
     def clear_props(self):
         """Убирает свойства цепей, вершин и ребер"""
         self.clear_cutpoints()
         self.clear_bridges()
-        self.clear_cycles()
-        self.clear_components()
