@@ -10,7 +10,7 @@ from models.graph import Graph
 from functions import get_graph_names, get_graph_by_name
 from PyQt5.Qt import QStandardItemModel, QAbstractItemView
 from PyQt5 import uic
-from PyQt5.QtGui import QCloseEvent
+from PyQt5.QtGui import QCloseEvent, QIcon
 from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox
 from models import db_session
 from settings import NOT_OPEN, ENTER_GRAPH
@@ -35,6 +35,7 @@ class Mentor(QMainWindow):
 
     def initUI(self) -> None:
         """Настройка UI и привязка событий к обработчикам"""
+        self.setWindowIcon(QIcon('images/icon.png'))
         self.treeModel = QStandardItemModel()
         self.rootNode = self.treeModel.invisibleRootItem()
         self.graph_list.setModel(self.treeModel)

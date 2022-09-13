@@ -1,6 +1,7 @@
 from PyQt5.QtWidgets import QWidget, QHeaderView, QMessageBox, \
     QTableWidgetItem as QItem
 from PyQt5 import uic
+from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import Qt
 from functions import str_is_float, get_graph_by_name, create_ribs, add_node, \
     delete_node, rename_node
@@ -24,6 +25,7 @@ class GraphMatrix(QWidget):
 
     def initUI(self) -> None:
         """Метод для установки UI и привязки событий"""
+        self.setWindowIcon(QIcon('images/icon2.png'))
         self.setLayout(self.vl)
         self.addBtn.clicked.connect(self.addNode)
         self.deleteBtn.clicked.connect(self.deleteNode)

@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import QWidget, QTableWidgetItem as QItem, QHeaderView, \
     QMessageBox, QTableWidgetSelectionRange
+from PyQt5.QtGui import QIcon
 from forms.table_checkbox import TableCheckbox
 from PyQt5 import uic
 from models.edge import Rib
@@ -24,6 +25,7 @@ class EdgeList(QWidget):
 
     def initUI(self) -> None:
         """Метод для установки UI и привязки событий"""
+        self.setWindowIcon(QIcon('images/icon2.png'))
         self.setLayout(self.vl)
         self.addEdge.clicked.connect(self.addRow)
         self.deleteEdge.clicked.connect(self.deleteRow)
