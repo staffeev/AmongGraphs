@@ -6,7 +6,7 @@ from math import inf
 from typing import Union
 from models.node import Vertex
 from models.edge import Rib
-from models.chain import Chain
+from models.cycle import Chain
 
 
 class Graph(SqlAlchemyBase):

@@ -14,10 +14,10 @@ association_table = Table(
 
 
 association_table_2 = Table(
-    'rib_to_chain',
+    'rib_to_cycle',
     SqlAlchemyBase.metadata,
     Column('ribs', Integer, ForeignKey('ribs.id')),
-    Column('chains', Integer, ForeignKey('chains.id'))
+    Column('cycles', Integer, ForeignKey('cycles.id'))
 )
 
 
