@@ -14,10 +14,10 @@ association_table = Table(
 
 
 association_table_2 = Table(
-    'rib_to_chain',
+    'rib_to_cycle',
     SqlAlchemyBase.metadata,
     Column('ribs', Integer, ForeignKey('ribs.id')),
-    Column('chains', Integer, ForeignKey('chains.id'))
+    Column('cycles', Integer, ForeignKey('cycles.id'))
 )
 
 
@@ -122,3 +122,7 @@ class Rib(SqlAlchemyBase):
         graph.ribs[self.key] = self
         graph.ribs.pop(self.old_key, None)
         self.graph = graph
+
+    def set_bridge(self, value: bool):
+        """Устаналивает метку моста"""
+        self.is_bridge = value

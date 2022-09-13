@@ -1,0 +1,7 @@
+start,end,weight,is_directed
+A,B,10,0
+B,C,15,1
+C,D,1,1
+D,E,5,0
+E,F,9,1
+F,D,24,0

@@ -6,11 +6,13 @@ from forms.add_from_csv import AddFromCsv
 from forms.tree_element import TreeItem
 from forms.edge_list import EdgeList
 from forms.matrix import GraphMatrix
+from properties_definer import PropertyDefiner
 from models.graph import Graph
 from functions import get_graph_names, get_graph_by_name
 from PyQt5.Qt import QStandardItemModel, QAbstractItemView
 from PyQt5 import uic
-from PyQt5.QtGui import QCloseEvent
+from PyQt5.QtGui import QCloseEvent, QIcon
+from PyQt5.QtCore import QItemSelectionModel, QModelIndex
 from PyQt5.QtWidgets import QMainWindow, QApplication, QMessageBox
 from models import db_session
 from settings import NOT_OPEN, ENTER_GRAPH
@@ -31,10 +33,12 @@ class Mentor(QMainWindow):
         self.window = None
         self.image = None
         self.canvas = Canvas(parent=self)
+        self.definer = PropertyDefiner(parent=self)
         self.initUI()
 
     def initUI(self) -> None:
         """Настройка UI и привязка событий к обработчикам"""
+        self.setWindowIcon(QIcon('images/icon.png'))
         self.treeModel = QStandardItemModel()
         self.rootNode = self.treeModel.invisibleRootItem()
         self.graph_list.setModel(self.treeModel)
@@ -49,7 +53,6 @@ class Mentor(QMainWindow):
         self.actionCreate.triggered.connect(self.createGraph)
         self.actionOpen.triggered.connect(self.openGraph)
         self.actionDelete.triggered.connect(self.deleteGraph)
-        # self.actionSave.triggered.connect(self.saveChanges)
         self.actionExit.triggered.connect(self.close)
         self.actionEdit_matrix.triggered.connect(self.openWindow)
         self.actionEdit_list.triggered.connect(self.openWindow)
@@ -109,6 +112,9 @@ class Mentor(QMainWindow):
         self.graph_name = graph.name
         self.showTreeOfElements()
         self.canvas.loadGraph(graph.name)
+        self.definer.change_graph(graph.name)
+        if self.window is not None and not self.window.isHidden():
+            self.window.changeGraph(self.graph_name)
         session.close()
 
     def deleteGraph(self, name=None) -> None:
@@ -124,24 +130,38 @@ class Mentor(QMainWindow):
             graph = session.query(Graph).filter(
                 Graph.name == form.name_to_return
             ).first()
+        if graph is None:
+            return
         session.delete(graph)
         session.commit()
         if graph.name == self.graph_name:
+            self.graph_name = None
             self.clearTree()
             self.canvas.clear()
         if self.window is not None:
             self.window.close()
         session.close()
 
-    def saveChanges(self) -> None:
-        """Метод для сохранения изменений"""
-        # TODO: save changes
-        pass
+    def selectChildren(self, index: QModelIndex):
+        """Выделение всех детей поддерева"""
+        selection_model = self.graph_list.selectionModel()
+        model = index.model()
+        item = model.itemFromIndex(index)
+        for i in range(item.rowCount()):
+            child = model.index(i, 0, index)
+            selection_model.select(child, QItemSelectionModel.Select)
 
     def selectFromTree(self) -> None:
         """Выделение тех элементов на холсте, которые были выделены в дереве"""
         self.canvas.unselect()
-        names = {i.model().itemFromIndex(i).text() for i in self.graph_list.selectedIndexes()}
+        names = set()
+        for ix in self.graph_list.selectedIndexes():
+            item = ix.model().itemFromIndex(ix)
+            parent = ix.parent().row()
+            if parent == -1:  # Root node
+                self.selectChildren(ix)
+                continue
+            names.add(item.text())
         self.canvas.select(names)
 
     def showTreeOfElements(self) -> None:
@@ -153,10 +173,18 @@ class Mentor(QMainWindow):
             0, TreeItem(self.graph_name, bold=True)
         )
         nodes = TreeItem("Nodes")
-        nodes.appendRows([TreeItem(v.name, 8) for v in graph.nodes])
+        nodes.appendRows([TreeItem(str(v), 8) for v in graph.nodes])
         ribs = TreeItem("Ribs")
         ribs.appendRows([TreeItem(str(r), 8) for r in graph.ribs.values()])
-        self.rootNode.appendRows([nodes, ribs])
+        cutpoints = TreeItem("Cutpoints")
+        cutpoints.appendRows([TreeItem(str(c), 8) for c in graph.get_cutpoints()])
+        bridges = TreeItem("Bridges")
+        bridges.appendRows([TreeItem(str(b), 8) for b in graph.get_bridges()])
+        cycles = TreeItem("Cycles")
+        cycles.appendRows([TreeItem(str(cy), 8) for cy in graph.cycles])
+        components = TreeItem("Components")
+        components.appendRows([TreeItem(str(cmp), 8) for cmp in graph.components])
+        self.rootNode.appendRows([nodes, ribs, cutpoints, bridges, cycles, components])
         session.close()
 
     def clearTree(self) -> None:
@@ -201,6 +229,7 @@ class Mentor(QMainWindow):
 if __name__ == '__main__':
     db_session.global_init('graphs.db')
     app = QApplication(sys.argv)
+    app.setStyle('fusion')
     programme = Mentor()
     programme.show()
     sys.excepthook = except_hook

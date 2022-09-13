@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QWidget, QApplication, QMenu, QMessageBox
 from PyQt5.QtGui import QPainter, QColor
 from PyQt5.QtCore import Qt
 from settings import DEFAULT_DIST, ZOOM_STEP, DARK_GRAY, MIN_ZOOM, \
-    MAX_ZOOM, MAX_CANVAS_SIZE, ARE_YOU_SURE
+    MAX_ZOOM, MAX_CANVAS_SIZE, ARE_YOU_SURE, RED, SELECTED_ITEM_COLOR, BLACK
 from models import db_session
 from models.edge import Rib
 from forms.edge_data import EdgeData
@@ -68,7 +68,7 @@ class Canvas(QWidget):
         for rib in graph.ribs.values():
             n1 = self.graph_nodes[rib.nodes[0].cell]
             n2 = self.graph_nodes[rib.nodes[1].cell]
-            self.graph_ribs[rib.get_crds()] = CanvasEdge(n1, n2, rib, self)
+            self.graph_ribs[n1, n2] = CanvasEdge(n1, n2, rib, self)
         session.close()
         self.unselect()
         self.colorizeNodes()
@@ -165,10 +165,39 @@ class Canvas(QWidget):
         self.selected_item = (col, row)
         self.repaint()
 
+    def unselectPath(self):
+        """Отменяет выделение ребер пути"""
+        [i.setColor(BLACK) for i in self.graph_ribs.values()]
+
+    def selectPathRibs(self, names: list[str]):
+        """Выделяет ребра, принадлежащие пути"""
+        session = db_session.create_session()
+        graph = get_graph_by_name(session, self.graph_name)
+        for i in range(1, len(names)):
+            n1 = self.graph_nodes[graph.get_node_by_name(names[i - 1]).cell]
+            n2 = self.graph_nodes[graph.get_node_by_name(names[i]).cell]
+            rib = self.graph_ribs[n1, n2]
+            rib.setColor(SELECTED_ITEM_COLOR)
+        session.close()
+
     def select(self, names: set[str]):
         """Выделение элементов графа по их именам (вершины, ребра)"""
-        nodes = [i for i in self.graph_nodes.values() if str(i) in names]
-        ribs = [i for i in self.graph_ribs.values() if i.get_name() in names or i.get_inv_name() in names]
+        nodes = []
+        ribs = []
+        cycles = []
+        for el in names:
+            if ', ' in el:
+                nodes.extend(el.split(', '))
+            elif el.count('-') > 1:
+                spl = el.split('-')
+                ribs.extend([spl[i - 1] + '-' + spl[i] for i in range(1, len(spl))])
+                cycles.append(el)
+            elif el.count('-') == 1:
+                ribs.append(el)
+            else:
+                nodes.append(el)
+        nodes = [i for i in self.graph_nodes.values() if str(i) in nodes]
+        ribs = [i for i in self.graph_ribs.values() if i.get_name() in ribs or i.get_inv_name() in ribs]
         self.ctrl_nodes.extend([i for i in nodes if i not in self.ctrl_nodes])
         for i in ribs:
             if i.start not in self.ctrl_nodes:
@@ -182,6 +211,10 @@ class Canvas(QWidget):
         """Отмена выделения элементов"""
         [i.unselect() for i in self.ctrl_nodes]
         self.ctrl_nodes = []
+        self.repaint()
+
+    def mouseDoubleClickEvent(self, event):
+        self.unselectPath()
         self.repaint()
 
     def mousePressEvent(self, event) -> None:
@@ -247,6 +280,8 @@ class Canvas(QWidget):
 
     def contextMenuEvent(self, event) -> None:
         """Открытие контекстного меню"""
+        self.unselectPath()
+        self.repaint()
         x, y = event.x(), event.y()
         row, col = self.getCell(x, y)
         self.last_cell = col, row
@@ -263,8 +298,8 @@ class Canvas(QWidget):
             menu.addAction('Delete nodes', lambda: self.deleteNode(arg))
         elif len_selected == 2:
             n1, n2 = self.ctrl_nodes
-            print(n1.node_name, n2.node_name)
-            edge = self.getEdge(n1.row, n1.col, n2.row, n2.col)
+            edge = self.getEdge(n1, n2)
+            menu.addAction('Find minimum cost path', lambda: self.findPath(n1, n2))
             if edge is None:
                 menu.addAction('Add edge', lambda: self.addEdge(n1, n2))
             else:
@@ -281,13 +316,9 @@ class Canvas(QWidget):
             menu.addAction('Add node', self.addNode)
         menu.exec_(self.mapToGlobal(event.pos()))
 
-    def getEdge(self, row1: int, col1: int, row2: int, col2: int) -> CanvasEdge:
+    def getEdge(self, n1: CanvasNode, n2: CanvasNode) -> CanvasEdge:
         """Возвращает ребро по координатам"""
-        crds1 = row1, col1, row2, col2
-        crds2 = row2, col2, row1, col1
-        print(crds1, crds2)
-        print(self.graph_ribs)
-        return self.graph_ribs.get(crds1, self.graph_ribs.get(crds2, None))
+        return self.graph_ribs.get((n1, n2), self.graph_ribs.get((n2, n1), None))
 
     def addEdge(self, n1: CanvasNode, n2: CanvasNode):
         """Добавление ребра"""
@@ -308,16 +339,13 @@ class Canvas(QWidget):
         session.add(rib)
         session.commit()
         if form.radio2.isChecked():
-            self.graph_ribs[n2.row, n2.col, n1.row, n1.col] = CanvasEdge(n2, n1, rib, self)
+            self.graph_ribs[n2, n1] = CanvasEdge(n2, n1, rib, self)
         else:
-            self.graph_ribs[n1.row, n1.col, n2.row, n2.col] = CanvasEdge(n1, n2, rib, self)
+            self.graph_ribs[n1, n2] = CanvasEdge(n1, n2, rib, self)
         self.colorizeNodes()
-        self.repaint()
         session.close()
-        if self.prnt.window is not None:
-            self.prnt.window.loadTable()
-        self.prnt.showTreeOfElements()
-        self.prnt.graph_list.expandAll()
+        self.repaint()
+        self.update_mentor()
 
     def changeEdge(self, edge: CanvasEdge):
         """Изменение параметров ребра"""
@@ -343,10 +371,7 @@ class Canvas(QWidget):
         session.close()
         self.unselect()
         self.repaint()
-        if self.prnt.window is not None:
-            self.prnt.window.loadTable()
-        self.prnt.showTreeOfElements()
-        self.prnt.graph_list.expandAll()
+        self.update_mentor()
 
     def deleteEdge(self, edges: list[CanvasEdge]):
         """Удаление ребра с холста и из БД по id (берется из edge)"""
@@ -361,16 +386,11 @@ class Canvas(QWidget):
         [session.delete(rib) for rib in ribs]
         session.commit()
         session.close()
-        print([i.get_crds() for i in edges])
-        print(self.graph_ribs )
-        [self.graph_ribs.pop(i.get_crds(), None) for i in edges]
-        [self.graph_ribs.pop(i.get_inv_crds(), None) for i in edges]
+        to_pop = [i for i in self.graph_ribs if self.graph_ribs[i] in edges]
+        [self.graph_ribs.pop(i, None) for i in to_pop]
         self.colorizeNodes()
         self.repaint()
-        if self.prnt.window is not None:
-            self.prnt.window.loadTable()
-        self.prnt.showTreeOfElements()
-        self.prnt.graph_list.expandAll()
+        self.update_mentor()
 
     def getCell(self, x: int, y: int) -> tuple[int, int]:
         """Возвращает индекс клетки в сетке по координатам"""
@@ -383,10 +403,7 @@ class Canvas(QWidget):
         add_node(self.graph_name, self.last_cell)
         self.loadGraph(self.graph_name)
         self.repaint()
-        if self.prnt.window is not None:
-            self.prnt.window.loadTable()
-        self.prnt.showTreeOfElements()
-        self.prnt.graph_list.expandAll()
+        self.update_mentor()
 
     def deleteNode(self, nodes) -> None:
         """Метод для удаления вершины с холста"""
@@ -394,10 +411,7 @@ class Canvas(QWidget):
             return
         self.loadGraph(self.graph_name)
         self.repaint()
-        if self.prnt.window is not None:
-            self.prnt.window.loadTable()
-        self.prnt.showTreeOfElements()
-        self.prnt.graph_list.expandAll()
+        self.update_mentor()
 
     def renameNode(self) -> None:
         """Переименование вершины"""
@@ -407,10 +421,7 @@ class Canvas(QWidget):
             return
         self.graph_nodes[row, col].setName(new_name)
         self.repaint()
-        if self.prnt.window is not None:
-            self.prnt.window.loadTable()
-        self.prnt.showTreeOfElements()
-        self.prnt.graph_list.expandAll()
+        self.update_mentor()
 
     def colorizeNodes(self):
         """Раскрашивание вершин в зависимости от количества связей"""
@@ -427,6 +438,21 @@ class Canvas(QWidget):
             num = d_colors[cell]
             self.graph_nodes[cell].setColor(QColor(colors[num].hex))
         session.close()
+
+    def findPath(self, n1, n2):
+        """Определение минимального по стоимости пути между двумя вершинами"""
+        path = self.prnt.definer.find_min_path(n1.node_name, n2.node_name)
+        self.selectPathRibs(path)
+
+    def update_mentor(self) -> None:
+        """Обновление родительского класса"""
+        if self.prnt.window is not None:
+            self.prnt.window.loadTable()
+        self.prnt.definer.create_nx_graph()
+        self.prnt.definer.define_all()
+        self.prnt.showTreeOfElements()
+        self.prnt.graph_list.expandAll()
+
 
 
 if __name__ == '__main__':

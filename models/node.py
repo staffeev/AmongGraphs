@@ -1,4 +1,4 @@
-from sqlalchemy import Column, Integer, String, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, Boolean, ForeignKey, Table
 from sqlalchemy.orm import relation
 from .db_session import SqlAlchemyBase
 from itertools import product
@@ -6,10 +6,18 @@ from settings import MAX_CANVAS_SIZE
 from random import choice
 
 
+association_table_3 = Table(
+    'vertex_to_component',
+    SqlAlchemyBase.metadata,
+    Column('vertexes', Integer, ForeignKey('vertexes.id')),
+    Column('components', Integer, ForeignKey('components.id'))
+)
+
+
 class Vertex(SqlAlchemyBase):
     """Класс для модели вершины графа"""
     __tablename__ = 'vertexes'
-    serialize_rules = ('-ribs_', '-chains_', '-graph')
+    serialize_rules = ('-ribs_', '-graph')
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, index=True)
     is_cutpoint = Column(Boolean, default=False)
@@ -41,6 +49,10 @@ class Vertex(SqlAlchemyBase):
     def rename(self, name: str) -> None:
         """Метод для переименования вершины"""
         self.name = name.strip()
+
+    def set_cutpoint(self, value: bool):
+        """Установка флага точки сочленения"""
+        self.is_cutpoint = value
 
     def __str__(self):
         return self.name

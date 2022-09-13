@@ -1,5 +1,6 @@
 from PyQt5.QtWidgets import QWidget, QTableWidgetItem as QItem, QHeaderView, \
     QMessageBox, QTableWidgetSelectionRange
+from PyQt5.QtGui import QIcon
 from forms.table_checkbox import TableCheckbox
 from PyQt5 import uic
 from models.edge import Rib
@@ -24,6 +25,7 @@ class EdgeList(QWidget):
 
     def initUI(self) -> None:
         """Метод для установки UI и привязки событий"""
+        self.setWindowIcon(QIcon('images/icon2.png'))
         self.setLayout(self.vl)
         self.addEdge.clicked.connect(self.addRow)
         self.deleteEdge.clicked.connect(self.deleteRow)
@@ -34,6 +36,11 @@ class EdgeList(QWidget):
         self.table.itemChanged.connect(self.changeItem)
         self.table.selectionModel().selectionChanged.connect(
             self.checkUnselected)
+
+    def changeGraph(self, graph_name):
+        """Меняет граф"""
+        self.graph_name = graph_name
+        self.loadTable()
 
     def checkUnselected(self, _, unselected) -> bool:
         """Обработчик валидности невыделенных ячеек"""
@@ -182,6 +189,7 @@ class EdgeList(QWidget):
         session.close()
         self.modified = {}
         self.new_ribs = 0
+        self.parent.definer.define_all()
         self.parent.showTreeOfElements()
         self.parent.canvas.loadGraph(self.graph_name)
         self.parent.canvas.repaint()
