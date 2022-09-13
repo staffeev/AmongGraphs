@@ -130,9 +130,12 @@ class Mentor(QMainWindow):
             graph = session.query(Graph).filter(
                 Graph.name == form.name_to_return
             ).first()
+        if graph is None:
+            return
         session.delete(graph)
         session.commit()
         if graph.name == self.graph_name:
+            self.graph_name = None
             self.clearTree()
             self.canvas.clear()
         if self.window is not None:
@@ -212,12 +215,10 @@ class Mentor(QMainWindow):
             name = self.graph_name
             self.deleteGraph(name)
             self.openGraph(name=self.createGraph(name))
-            self.definer.change_graph(name)
         else:
             name = self.createGraph()
             if name is None:
                 return
-            self.definer.change_graph(name)
             self.openGraph(name=name)
 
     def closeEvent(self, event: QCloseEvent) -> None:

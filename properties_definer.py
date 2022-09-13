@@ -37,6 +37,7 @@ class PropertyDefiner:
         graph.clear_props()
         session.commit()
         session.close()
+        self.create_nx_graph()
         self.check_directed()
         self.check_connected()
         self.find_cutpoints()
