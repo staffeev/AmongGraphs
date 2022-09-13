@@ -10,15 +10,14 @@ class Component(SqlAlchemyBase):
     serialize_rules = ('-nodes', '-graph')
     id = Column(Integer, primary_key=True, autoincrement=True)
     graph_id = Column(Integer, ForeignKey('graphs.id'))
-    nodes = relation("Vertex", secondary="vertex_to_component", backref="components",
-                     cascade="all, delete")
+    nodes = relation("Vertex", secondary="vertex_to_component", backref="components")
 
     def add_nodes(self, *nodes: Vertex) -> None:
         """Метод добавления ребер в цепь"""
         [self.nodes.append(node) for node in nodes if node not in self.nodes]
 
     def __str__(self):
-        return ', '.join(sorted(self.nodes, key=lambda x: str(x)))
+        return ', '.join(sorted(map(str, self.nodes)))
 
     def __repr__(self):
         return f"Component({str(self)})"

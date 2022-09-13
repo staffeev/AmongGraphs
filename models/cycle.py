@@ -10,8 +10,7 @@ class Cycle(SqlAlchemyBase):
     serialize_rules = ('-ribs', '-graph')
     id = Column(Integer, primary_key=True, autoincrement=True)
     graph_id = Column(Integer, ForeignKey('graphs.id'))
-    ribs = relation("Rib", secondary="rib_to_cycle", backref="cycles",
-                    cascade="all, delete")
+    ribs = relation("Rib", secondary="rib_to_cycle", backref="cycles")
 
     def add_ribs(self, *ribs: Rib) -> None:
         """Метод добавления ребер в цикл"""

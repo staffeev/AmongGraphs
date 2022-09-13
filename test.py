@@ -1,23 +1,8 @@
-class A:
-    def __init__(self, name):
-        self.name = name
+from networkx import DiGraph
 
-    def __str__(self):
-        return f"A({self.name})"
-
-
-class B:
-    def __init__(self, n1, n2):
-        self.n1, self.n2 = n1, n2
-
-
-d = {}
-a1, a2 = A('A'), A("B")
-b = B(a1, a2)
-d[a1, a2] = b
-print(d)
-
-
+g =DiGraph()
+g.add_nodes_from(['1', '1'])
+print(g.nodes)
 
 # import sys
 # from PyQt5.QtWidgets import QWidget, QApplication

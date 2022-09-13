@@ -22,6 +22,7 @@ class PropertyDefiner:
         ribs = [(i, j, ribs[i, j]) for i, j in ribs]
         self.graph = DiGraph()
         self.graph.add_weighted_edges_from(ribs)
+        self.graph.add_nodes_from(map(str, graph.nodes))
         session.close()
 
     def change_graph(self, name: str):
@@ -55,10 +56,8 @@ class PropertyDefiner:
         """Определение того, является ли граф сильно связным"""
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
-        try:
+        if self.graph.nodes:
             graph.is_connected = is_strongly_connected(self.graph)
-        except networkx.exception.NetworkXPointlessConcept:
-            pass
         session.commit()
         session.close()
 
@@ -95,7 +94,6 @@ class PropertyDefiner:
         cycles = list(simple_cycles(self.graph))
         if not cycles:
             return
-        print(cycles)
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
         g_cycles = graph.cycles
@@ -124,14 +122,11 @@ class PropertyDefiner:
         for c in comps:
             comp = Component()
             nodes = graph.get_nodes_by_name(*c)
-            comp.add_nodes(nodes)
+            comp.add_nodes(*nodes)
             graph.add_comps(comp)
             session.add(comp)
         session.commit()
         session.close()
-
-        print(comps)
-        # TODO
 
     def find_min_path(self):
         """Нахождение минимального пути между двумя вершинами"""

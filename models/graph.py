@@ -58,12 +58,26 @@ class Graph(SqlAlchemyBase):
         """Метод, возвращающий список имен вершин графа"""
         return list(map(str, self.nodes))
 
+    def get_node_by_name(self, name: str) -> Union[None, Vertex]:
+        """возвращает верщшину по имени (одну по одному имени)"""
+        node = [i for i in self.nodes if i.name == name]
+        if not node:
+            return None
+        return node[0]
+
     def get_nodes_by_name(self, *names: str) -> list[Vertex]:
         """Метод, возвращающий список вершин графа по их именам"""
         return [i for i in self.nodes if i.name in names]
 
+    def get_node_by_index(self, index: int) -> Union[None, Vertex]:
+        """Возвращает вершину по ее позиции"""
+        try:
+            return self.nodes[index]
+        except IndexError:
+            return None
+
     def get_nodes_by_index(self, *indexes: int) -> list[Vertex]:
-        """Метод, возвращающий список вершин графа по их именам"""
+        """Метод, возвращающий список вершин графа по их позициям"""
         return [self.nodes[i] for i in indexes]
 
     def get_nodes_by_id(self, *ids: int) -> list[Vertex]:
@@ -84,9 +98,11 @@ class Graph(SqlAlchemyBase):
     def get_rib_by_nodes(self, node1: Union[str, int, Vertex], node2: Union[str, int, Vertex]) -> Union[Rib, None]:
         """Метод, возвращающий ребро по именам его вершин"""
         if isinstance(node1, str):
-            v1, v2 = self.get_nodes_by_name(node1, node2)
+            v1 = self.get_node_by_name(node1)
+            v2 = self.get_node_by_name(node2)
         elif isinstance(node1, int):
-            v1, v2 = self.get_nodes_by_index(node1, node2)
+            v1 = self.get_node_by_index(node1)
+            v2 = self.get_node_by_index(node2)
         else:
             v1, v2 = node1, node2
         return self.ribs.get((v1, v2), None)

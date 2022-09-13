@@ -139,17 +139,6 @@ class Mentor(QMainWindow):
             self.window.close()
         session.close()
 
-    def iterTree(self):
-        return
-        model = self.graph_list.model()
-        # model = QStandardItemModel()
-        for i in range(model.rowCount()):
-            item = model.item(i)
-            print(item.text())
-            for j in range(item.rowCount()):
-                item_child = item.child(j, 0)
-                print('\t' + item_child.text())
-
     def selectChildren(self, index: QModelIndex):
         """Выделение всех детей поддерева"""
         selection_model = self.graph_list.selectionModel()
@@ -223,10 +212,12 @@ class Mentor(QMainWindow):
             name = self.graph_name
             self.deleteGraph(name)
             self.openGraph(name=self.createGraph(name))
+            self.definer.change_graph(name)
         else:
             name = self.createGraph()
             if name is None:
                 return
+            self.definer.change_graph(name)
             self.openGraph(name=name)
 
     def closeEvent(self, event: QCloseEvent) -> None:
