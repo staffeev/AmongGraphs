@@ -263,7 +263,6 @@ class Canvas(QWidget):
             menu.addAction('Delete nodes', lambda: self.deleteNode(arg))
         elif len_selected == 2:
             n1, n2 = self.ctrl_nodes
-            print(n1.node_name, n2.node_name)
             edge = self.getEdge(n1, n2)
             if edge is None:
                 menu.addAction('Add edge', lambda: self.addEdge(n1, n2))
@@ -308,12 +307,9 @@ class Canvas(QWidget):
         else:
             self.graph_ribs[n1, n2] = CanvasEdge(n1, n2, rib, self)
         self.colorizeNodes()
-        self.repaint()
         session.close()
-        if self.prnt.window is not None:
-            self.prnt.window.loadTable()
-        self.prnt.showTreeOfElements()
-        self.prnt.graph_list.expandAll()
+        self.repaint()
+        self.update_mentor()
 
     def changeEdge(self, edge: CanvasEdge):
         """Изменение параметров ребра"""
@@ -339,10 +335,7 @@ class Canvas(QWidget):
         session.close()
         self.unselect()
         self.repaint()
-        if self.prnt.window is not None:
-            self.prnt.window.loadTable()
-        self.prnt.showTreeOfElements()
-        self.prnt.graph_list.expandAll()
+        self.update_mentor()
 
     def deleteEdge(self, edges: list[CanvasEdge]):
         """Удаление ребра с холста и из БД по id (берется из edge)"""
@@ -361,10 +354,7 @@ class Canvas(QWidget):
         [self.graph_ribs.pop(i, None) for i in to_pop]
         self.colorizeNodes()
         self.repaint()
-        if self.prnt.window is not None:
-            self.prnt.window.loadTable()
-        self.prnt.showTreeOfElements()
-        self.prnt.graph_list.expandAll()
+        self.update_mentor()
 
     def getCell(self, x: int, y: int) -> tuple[int, int]:
         """Возвращает индекс клетки в сетке по координатам"""
@@ -377,10 +367,7 @@ class Canvas(QWidget):
         add_node(self.graph_name, self.last_cell)
         self.loadGraph(self.graph_name)
         self.repaint()
-        if self.prnt.window is not None:
-            self.prnt.window.loadTable()
-        self.prnt.showTreeOfElements()
-        self.prnt.graph_list.expandAll()
+        self.update_mentor()
 
     def deleteNode(self, nodes) -> None:
         """Метод для удаления вершины с холста"""
@@ -388,10 +375,7 @@ class Canvas(QWidget):
             return
         self.loadGraph(self.graph_name)
         self.repaint()
-        if self.prnt.window is not None:
-            self.prnt.window.loadTable()
-        self.prnt.showTreeOfElements()
-        self.prnt.graph_list.expandAll()
+        self.update_mentor()
 
     def renameNode(self) -> None:
         """Переименование вершины"""
@@ -401,10 +385,7 @@ class Canvas(QWidget):
             return
         self.graph_nodes[row, col].setName(new_name)
         self.repaint()
-        if self.prnt.window is not None:
-            self.prnt.window.loadTable()
-        self.prnt.showTreeOfElements()
-        self.prnt.graph_list.expandAll()
+        self.update_mentor()
 
     def colorizeNodes(self):
         """Раскрашивание вершин в зависимости от количества связей"""
@@ -421,6 +402,16 @@ class Canvas(QWidget):
             num = d_colors[cell]
             self.graph_nodes[cell].setColor(QColor(colors[num].hex))
         session.close()
+
+    def update_mentor(self) -> None:
+        """Обновление родительского класса"""
+        if self.prnt.window is not None:
+            self.prnt.window.loadTable()
+        self.prnt.definer.create_nx_graph()
+        self.prnt.definer.define_all()
+        self.prnt.showTreeOfElements()
+        self.prnt.graph_list.expandAll()
+
 
 
 if __name__ == '__main__':

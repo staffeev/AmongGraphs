@@ -98,7 +98,7 @@ class Graph(SqlAlchemyBase):
 
     def get_bridges(self) -> list[Rib]:
         """Возвращает все мосты"""
-        return [i for i in self.ribs if i.is_bridge]
+        return [i for i in self.ribs.values() if i.is_bridge]
 
     def get_cycles(self) -> list[Chain]:
         """Возвращает все циклы"""
@@ -107,3 +107,33 @@ class Graph(SqlAlchemyBase):
     def get_components(self) -> list[Chain]:
         """Возвращает все компоненты сильной связности"""
         return [i for i in self.chains if i.is_component]
+
+    def check_directed(self):
+        """Определение того, является ли граф ориентированным"""
+        if any([x.is_directed for x in self.ribs.values()]):
+            self.is_directed = True
+        else:
+            self.is_directed = False
+
+    def clear_cutpoints(self):
+        """Убирает метку точки сочленения со всех таковых вершин"""
+        [i.set_cutpoint(False) for i in self.get_cutpoints()]
+
+    def clear_bridges(self):
+        """Убирает метку моста со всех таковых ребер"""
+        [i.set_bridge(False) for i in self.get_bridges()]
+
+    def clear_cycles(self):
+        """Убирает метку цикла с таковых цепей"""
+        [i.set_cycle(False) for i in self.get_cycles()]
+
+    def clear_components(self):
+        """Убирает метку компоненты с таковых цепей"""
+        [i.set_component(False) for i in self.get_components()]
+
+    def clear_props(self):
+        """Убирает свойства цепей, вершин и ребер"""
+        self.clear_cutpoints()
+        self.clear_bridges()
+        self.clear_cycles()
+        self.clear_components()

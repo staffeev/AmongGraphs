@@ -188,6 +188,7 @@ class GraphMatrix(QWidget):
                 continue
             self.processRib(i, j)
         self.modified = {}
+        self.parent.definer.define_all()
         self.parent.showTreeOfElements()
         self.parent.canvas.loadGraph(self.graph_name)
         self.parent.canvas.repaint()

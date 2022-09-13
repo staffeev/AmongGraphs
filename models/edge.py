@@ -122,3 +122,7 @@ class Rib(SqlAlchemyBase):
         graph.ribs[self.key] = self
         graph.ribs.pop(self.old_key, None)
         self.graph = graph
+
+    def set_bridge(self, value: bool):
+        """Устаналивает метку моста"""
+        self.is_bridge = value

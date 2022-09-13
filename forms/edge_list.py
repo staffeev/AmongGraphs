@@ -189,6 +189,7 @@ class EdgeList(QWidget):
         session.close()
         self.modified = {}
         self.new_ribs = 0
+        self.parent.definer.define_all()
         self.parent.showTreeOfElements()
         self.parent.canvas.loadGraph(self.graph_name)
         self.parent.canvas.repaint()

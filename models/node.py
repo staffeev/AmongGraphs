@@ -42,6 +42,10 @@ class Vertex(SqlAlchemyBase):
         """Метод для переименования вершины"""
         self.name = name.strip()
 
+    def set_cutpoint(self, value: bool):
+        """Установка флага точки сочленения"""
+        self.is_cutpoint = value
+
     def __str__(self):
         return self.name
 

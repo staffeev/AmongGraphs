@@ -6,6 +6,7 @@ from forms.add_from_csv import AddFromCsv
 from forms.tree_element import TreeItem
 from forms.edge_list import EdgeList
 from forms.matrix import GraphMatrix
+from properties_definer import PropertyDefiner
 from models.graph import Graph
 from functions import get_graph_names, get_graph_by_name
 from PyQt5.Qt import QStandardItemModel, QAbstractItemView
@@ -32,6 +33,7 @@ class Mentor(QMainWindow):
         self.window = None
         self.image = None
         self.canvas = Canvas(parent=self)
+        self.definer = PropertyDefiner()
         self.initUI()
 
     def initUI(self) -> None:
@@ -42,7 +44,6 @@ class Mentor(QMainWindow):
         self.graph_list.setModel(self.treeModel)
         self.graph_list.setSelectionMode(QAbstractItemView.ExtendedSelection)
         self.graph_list.selectionModel().selectionChanged.connect(self.selectFromTree)
-        self.graph_list.clicked.connect(self.test)
         # Настройка относительного позиционирования элементов главного окна
         self.splitter.addWidget(self.canvas)
         self.splitter.setSizes([100, 700])
@@ -111,6 +112,7 @@ class Mentor(QMainWindow):
         self.graph_name = graph.name
         self.showTreeOfElements()
         self.canvas.loadGraph(graph.name)
+        self.definer.change_graph(graph.name)
         if self.window is not None and not self.window.isHidden():
             self.window.changeGraph(self.graph_name)
         session.close()
@@ -136,13 +138,6 @@ class Mentor(QMainWindow):
         if self.window is not None:
             self.window.close()
         session.close()
-
-
-    def test(self):
-        return
-        model = index.model()
-        item = model.itemFromIndex()
-        print(item.text())
 
     def iterTree(self):
         return
@@ -186,11 +181,18 @@ class Mentor(QMainWindow):
             0, TreeItem(self.graph_name, bold=True)
         )
         nodes = TreeItem("Nodes")
-        nodes.appendRows([TreeItem(v.name, 8) for v in graph.nodes])
+        nodes.appendRows([TreeItem(str(v), 8) for v in graph.nodes])
         ribs = TreeItem("Ribs")
         ribs.appendRows([TreeItem(str(r), 8) for r in graph.ribs.values()])
-        self.rootNode.appendRows([nodes, ribs])
-        self.iterTree()
+        cutpoints = TreeItem("Cutpoints")
+        cutpoints.appendRows([TreeItem(str(c), 8) for c in graph.get_cutpoints()])
+        bridges = TreeItem("Bridges")
+        bridges.appendRows([TreeItem(str(b), 8) for b in graph.get_bridges()])
+        cycles = TreeItem("Cycles")
+        cycles.appendRows([TreeItem(str(cy), 8) for cy in graph.get_cycles()])
+        components = TreeItem("Components")
+        components.appendRows([TreeItem(str(cmp), 8) for cmp in graph.get_components()])
+        self.rootNode.appendRows([nodes, ribs, cutpoints, bridges, cycles, components])
         session.close()
 
     def clearTree(self) -> None:
