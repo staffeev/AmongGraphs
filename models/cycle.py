@@ -18,7 +18,6 @@ class Cycle(SqlAlchemyBase):
         [self.ribs.append(rib) for rib in ribs if rib not in self.ribs]
 
     def __str__(self):
-        print('-'.join(map(str, self.ribs)))
         return '-'.join(map(str, self.ribs))
 
     def __repr__(self):

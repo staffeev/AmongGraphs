@@ -95,25 +95,22 @@ class PropertyDefiner:
         cycles = list(simple_cycles(self.graph))
         if not cycles:
             return
+        print(cycles)
         session = db_session.create_session()
         graph = get_graph_by_name(session, self.graph_name)
         g_cycles = graph.cycles
         [session.delete(c) for c in g_cycles]
-        for c in cycles:
+        for c in filter(lambda x: len(x) > 2, cycles):
             cycle = Cycle()
-            for j in range(1, len(c) - 1):
+            for j in range(1, len(c)):
                 rib = graph.get_rib_by_nodes(c[j - 1], c[j])
                 if rib is None:
                     rib = graph.get_rib_by_nodes(c[j], c[j - 1])
                 cycle.add_ribs(rib)
             graph.add_cycles(cycle)
             session.add(cycle)
-            print(cycle.ribs)
-        print(cycle.ribs)
         session.commit()
         session.close()
-        print(cycles)
-        # TODO
 
     def find_components(self):
         """Определение компонент сильной связности"""
