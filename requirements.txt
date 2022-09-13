@@ -1,0 +1,4 @@
+PyQt5===5.15.4
+colour==0.1.5
+SQLAlchemy==1.4.31
+networkx==2.8.1
