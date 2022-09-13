@@ -114,8 +114,3 @@ def delete_node(parent, graph_name: str, selected: Union[list[tuple], set[int]])
     session.commit()
     session.close()
     return True
-
-
-def create_matrix(graph: Graph) -> list[list]:
-    # TODO: create matrix
-    pass

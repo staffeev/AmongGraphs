@@ -1,18 +1,21 @@
 import networkx.exception
-
+from PyQt5.QtWidgets import QMessageBox
 from functions import create_ribs, get_graph_by_name
 from models import db_session
 from networkx import DiGraph, simple_cycles, articulation_points, bridges, \
-    strongly_connected_components, is_strongly_connected
+    strongly_connected_components, is_strongly_connected, \
+    bellman_ford_path_length, bellman_ford_path
 from models.cycle import Cycle
 from models.component import Component
+from settings import PATH_NOT_EXIST, NEGATIVE_CYCLE, MIN_COST_WAY_EQ
 
 
 class PropertyDefiner:
     """Класс определителя свойств графа"""
-    def __init__(self):
+    def __init__(self, parent=None):
         self.graph_name = None
         self.graph = None
+        self.parent = parent
 
     def create_nx_graph(self):
         """Создает граф из библиотеки Networkx для определения свойств"""
@@ -129,6 +132,20 @@ class PropertyDefiner:
         session.commit()
         session.close()
 
-    def find_min_path(self):
+    def find_min_path(self, n1: str, n2: str):
         """Нахождение минимального пути между двумя вершинами"""
-        # TODO
+        try:
+            length = bellman_ford_path_length(self.graph, n1, n2)
+            path = bellman_ford_path(self.graph, n1, n2)
+            QMessageBox.information(
+                self.parent, "Minimum path", MIN_COST_WAY_EQ.format(n1, n2, length)
+            )
+            return path
+        except networkx.exception.NetworkXNoPath:
+            QMessageBox.warning(self.parent, 'No way',
+                                PATH_NOT_EXIST.format(n1, n2))
+        except networkx.exception.NetworkXUnbounded:
+            QMessageBox.warning(
+                self.parent, "No way",
+                PATH_NOT_EXIST.format(n1, n2) + '. ' + NEGATIVE_CYCLE
+            )

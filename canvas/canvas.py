@@ -4,7 +4,7 @@ from PyQt5.QtWidgets import QWidget, QApplication, QMenu, QMessageBox
 from PyQt5.QtGui import QPainter, QColor
 from PyQt5.QtCore import Qt
 from settings import DEFAULT_DIST, ZOOM_STEP, DARK_GRAY, MIN_ZOOM, \
-    MAX_ZOOM, MAX_CANVAS_SIZE, ARE_YOU_SURE
+    MAX_ZOOM, MAX_CANVAS_SIZE, ARE_YOU_SURE, RED, SELECTED_ITEM_COLOR, BLACK
 from models import db_session
 from models.edge import Rib
 from forms.edge_data import EdgeData
@@ -165,6 +165,21 @@ class Canvas(QWidget):
         self.selected_item = (col, row)
         self.repaint()
 
+    def unselectPath(self):
+        """Отменяет выделение ребер пути"""
+        [i.setColor(BLACK) for i in self.graph_ribs.values()]
+
+    def selectPathRibs(self, names: list[str]):
+        """Выделяет ребра, принадлежащие пути"""
+        session = db_session.create_session()
+        graph = get_graph_by_name(session, self.graph_name)
+        for i in range(1, len(names)):
+            n1 = self.graph_nodes[graph.get_node_by_name(names[i - 1]).cell]
+            n2 = self.graph_nodes[graph.get_node_by_name(names[i]).cell]
+            rib = self.graph_ribs[n1, n2]
+            rib.setColor(SELECTED_ITEM_COLOR)
+        session.close()
+
     def select(self, names: set[str]):
         """Выделение элементов графа по их именам (вершины, ребра)"""
         nodes = []
@@ -196,6 +211,10 @@ class Canvas(QWidget):
         """Отмена выделения элементов"""
         [i.unselect() for i in self.ctrl_nodes]
         self.ctrl_nodes = []
+        self.repaint()
+
+    def mouseDoubleClickEvent(self, event):
+        self.unselectPath()
         self.repaint()
 
     def mousePressEvent(self, event) -> None:
@@ -261,6 +280,8 @@ class Canvas(QWidget):
 
     def contextMenuEvent(self, event) -> None:
         """Открытие контекстного меню"""
+        self.unselectPath()
+        self.repaint()
         x, y = event.x(), event.y()
         row, col = self.getCell(x, y)
         self.last_cell = col, row
@@ -278,6 +299,7 @@ class Canvas(QWidget):
         elif len_selected == 2:
             n1, n2 = self.ctrl_nodes
             edge = self.getEdge(n1, n2)
+            menu.addAction('Find minimum cost path', lambda: self.findPath(n1, n2))
             if edge is None:
                 menu.addAction('Add edge', lambda: self.addEdge(n1, n2))
             else:
@@ -416,6 +438,11 @@ class Canvas(QWidget):
             num = d_colors[cell]
             self.graph_nodes[cell].setColor(QColor(colors[num].hex))
         session.close()
+
+    def findPath(self, n1, n2):
+        """Определение минимального по стоимости пути между двумя вершинами"""
+        path = self.prnt.definer.find_min_path(n1.node_name, n2.node_name)
+        self.selectPathRibs(path)
 
     def update_mentor(self) -> None:
         """Обновление родительского класса"""

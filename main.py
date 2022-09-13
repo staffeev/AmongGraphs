@@ -33,7 +33,7 @@ class Mentor(QMainWindow):
         self.window = None
         self.image = None
         self.canvas = Canvas(parent=self)
-        self.definer = PropertyDefiner()
+        self.definer = PropertyDefiner(parent=self)
         self.initUI()
 
     def initUI(self) -> None:

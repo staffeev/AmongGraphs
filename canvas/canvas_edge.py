@@ -1,5 +1,5 @@
 from models.edge import Rib
-from PyQt5.QtGui import QPainter, QPen, QFont, QPolygon
+from PyQt5.QtGui import QPen, QFont, QPolygon, QColor
 from PyQt5.QtCore import Qt
 from settings import BLACK, WHITE
 from functions import get_equilateral_triangle, \
@@ -11,10 +11,14 @@ class CanvasEdge:
     def __init__(self, n1, n2, rib: Rib, parent):
         self.parent = parent
         self.weight = rib.weight
+        self.color = BLACK
         self.id = rib.id
         self.is_directed = rib.is_directed
         self.start = n1
         self.end = n2
+
+    def setColor(self, color: QColor):
+        self.color = color
 
     def get_name(self):
         return f"{self.start.node_name}-{self.end.node_name}"
@@ -28,7 +32,7 @@ class CanvasEdge:
 
     def draw(self):
         """Рисование ребра"""
-        self.parent.qp.setPen(QPen(BLACK, self.parent.dist // 10, Qt.SolidLine))
+        self.parent.qp.setPen(QPen(self.color, self.parent.dist // 10, Qt.SolidLine))
         x1, y1 = self.parent.getPointCenter(self.start.row, self.start.col)
         x2, y2 = self.parent.getPointCenter(self.end.row, self.end.col)
         self.parent.qp.drawLine(x1, y1, x2, y2)
@@ -45,7 +49,8 @@ class CanvasEdge:
                           self.end.row, self.end.col)
         x, y = get_intersect_point(xc, yc, dist // 2, angle)
         points = get_equilateral_triangle(x, y, side, angle)
-        self.parent.qp.setBrush(BLACK)
+        self.parent.qp.setBrush(self.color)
+        self.parent.qp.setPen(self.color)
         self.parent.qp.drawPolygon(QPolygon([j for i in points for j in i]))
 
     def draw_label(self):
