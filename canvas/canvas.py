@@ -167,8 +167,22 @@ class Canvas(QWidget):
 
     def select(self, names: set[str]):
         """Выделение элементов графа по их именам (вершины, ребра)"""
-        nodes = [i for i in self.graph_nodes.values() if str(i) in names]
-        ribs = [i for i in self.graph_ribs.values() if i.get_name() in names or i.get_inv_name() in names]
+        nodes = []
+        ribs = []
+        cycles = []
+        for el in names:
+            if ', ' in el:
+                nodes.extend(el.split(', '))
+            elif el.count('-') > 1:
+                spl = el.split('-')
+                ribs.extend([spl[i - 1] + '-' + spl[i] for i in range(1, len(spl))])
+                cycles.append(el)
+            elif el.count('-') == 1:
+                ribs.append(el)
+            else:
+                nodes.append(el)
+        nodes = [i for i in self.graph_nodes.values() if str(i) in nodes]
+        ribs = [i for i in self.graph_ribs.values() if i.get_name() in ribs or i.get_inv_name() in ribs]
         self.ctrl_nodes.extend([i for i in nodes if i not in self.ctrl_nodes])
         for i in ribs:
             if i.start not in self.ctrl_nodes:

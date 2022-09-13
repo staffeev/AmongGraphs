@@ -1,8 +1,4 @@
-from networkx import DiGraph
 
-g =DiGraph()
-g.add_nodes_from(['1', '1'])
-print(g.nodes)
 
 # import sys
 # from PyQt5.QtWidgets import QWidget, QApplication
