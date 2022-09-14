@@ -176,8 +176,9 @@ class Canvas(QWidget):
         for i in range(1, len(names)):
             n1 = self.graph_nodes[graph.get_node_by_name(names[i - 1]).cell]
             n2 = self.graph_nodes[graph.get_node_by_name(names[i]).cell]
-            rib = self.graph_ribs[n1, n2]
-            rib.setColor(SELECTED_ITEM_COLOR)
+            rib = self.graph_ribs.get((n1, n2), self.graph_ribs.get((n2, n1), None))
+            if rib is not None:
+                rib.setColor(SELECTED_ITEM_COLOR)
         session.close()
 
     def select(self, names: set[str]):
@@ -442,7 +443,9 @@ class Canvas(QWidget):
     def findPath(self, n1, n2):
         """Определение минимального по стоимости пути между двумя вершинами"""
         path = self.prnt.definer.find_min_path(n1.node_name, n2.node_name)
-        self.selectPathRibs(path)
+        print(path)
+        if path is not None:
+            self.selectPathRibs(path)
 
     def update_mentor(self) -> None:
         """Обновление родительского класса"""
