@@ -28,7 +28,7 @@ class AddNewData(QDialog):
             QMessageBox.warning(self, "Warning", EMPTY)
         elif self.inputData.text() in self.names:
             QMessageBox.critical(self, "Error", ALREADY_EXISTS)
-        elif any(x in self.inputData.text() for x in '-, '):
-            QMessageBox.warning(self, 'Warning', CANNOT_CONTAIN_SYMBOL)
+        # elif any(x in self.inputData.text() for x in '-, '):
+        #     QMessageBox.warning(self, 'Warning', CANNOT_CONTAIN_SYMBOL)
         else:
             self.done(1)

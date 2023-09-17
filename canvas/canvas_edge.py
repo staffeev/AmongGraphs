@@ -32,7 +32,7 @@ class CanvasEdge:
 
     def draw(self):
         """Рисование ребра"""
-        self.parent.qp.setPen(QPen(self.color, self.parent.dist // 10, Qt.SolidLine))
+        self.parent.qp.setPen(QPen(self.color, self.parent.dist // 15, Qt.SolidLine))
         x1, y1 = self.parent.getPointCenter(self.start.row, self.start.col)
         x2, y2 = self.parent.getPointCenter(self.end.row, self.end.col)
         self.parent.qp.drawLine(int(x1), int(y1), int(x2), int(y2))

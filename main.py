@@ -162,6 +162,7 @@ class Mentor(QMainWindow):
                 self.selectChildren(ix)
                 continue
             names.add(item.text())
+        print(names)
         self.canvas.select(names)
 
     def showTreeOfElements(self) -> None:

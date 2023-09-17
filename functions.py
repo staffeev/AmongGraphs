@@ -86,7 +86,7 @@ def add_node(graph_name: str, cell=None) -> None:
     if not form.exec():
         session.close()
         return
-    v = Vertex(name=form.inputData.text())
+    v = Vertex(name=f'"{form.inputData.text()}"')
     graph.add_nodes(v)
     if cell is not None:
         v.set_cell(cell)

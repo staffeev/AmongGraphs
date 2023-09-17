@@ -25,6 +25,7 @@ class Canvas(QWidget):
         self.cols = cols
         self.zoom = 1
         self.dist = DEFAULT_DIST * self.zoom
+        self.bool_draw_grid = True
         self.move_canvas = False
         self.dif_x = self.dif_y = 0
         self.node_selected = False
@@ -101,6 +102,8 @@ class Canvas(QWidget):
 
     def drawGrid(self) -> None:
         """Отрисовка сетки"""
+        if not self.bool_draw_grid:
+            return
         self.qp.setPen(DARK_GRAY)
         for i in range(self.rows + 1):
             self.qp.drawLine(int(self.x), int(self.y + i * self.dist),
@@ -187,6 +190,8 @@ class Canvas(QWidget):
         ribs = []
         cycles = []
         for el in names:
+            if el.count('"') == 2:
+                nodes.append(el)
             if ', ' in el:
                 nodes.extend(el.split(', '))
             elif el.count('-') > 1:
@@ -197,7 +202,7 @@ class Canvas(QWidget):
                 ribs.append(el)
             else:
                 nodes.append(el)
-        nodes = [i for i in self.graph_nodes.values() if str(i) in nodes]
+        nodes = [i for i in self.graph_nodes.values() if i.node_name in nodes]
         ribs = [i for i in self.graph_ribs.values() if i.get_name() in ribs or i.get_inv_name() in ribs]
         self.ctrl_nodes.extend([i for i in nodes if i not in self.ctrl_nodes])
         for i in ribs:
@@ -278,6 +283,17 @@ class Canvas(QWidget):
         row = int((y - self.y) // self.dist)
         col = int((x - self.x) // self.dist)
         return 0 <= row < self.rows and 0 <= col < self.cols
+    
+    def change_grid_condition(self):
+        """Изменение флага отрисовки сетки"""
+        self.bool_draw_grid = not self.bool_draw_grid
+        self.repaint()
+
+    def change_node_color_condition(self):
+        """Изменение флага отрисовки вершин"""
+        for node in self.graph_nodes.values():
+            node.change_color_condition()
+        self.repaint()
 
     def contextMenuEvent(self, event) -> None:
         """Открытие контекстного меню"""
@@ -290,6 +306,8 @@ class Canvas(QWidget):
             return
         len_selected = len(self.ctrl_nodes)
         menu = QMenu(self)
+        menu.addAction("Disable/enable grid", self.change_grid_condition)
+        menu.addAction("Disable/enable node color", self.change_node_color_condition)
         if len_selected > 2:
             arg = [(i.row, i.col) for i in self.ctrl_nodes]
             edges = [i for i in self.graph_ribs.values() if i.start in
