@@ -35,7 +35,7 @@ class CanvasEdge:
         self.parent.qp.setPen(QPen(self.color, self.parent.dist // 10, Qt.SolidLine))
         x1, y1 = self.parent.getPointCenter(self.start.row, self.start.col)
         x2, y2 = self.parent.getPointCenter(self.end.row, self.end.col)
-        self.parent.qp.drawLine(x1, y1, x2, y2)
+        self.parent.qp.drawLine(int(x1), int(y1), int(x2), int(y2))
         self.draw_label()
         if self.is_directed:
             self.draw_arrow()
@@ -51,7 +51,7 @@ class CanvasEdge:
         points = get_equilateral_triangle(x, y, side, angle)
         self.parent.qp.setBrush(self.color)
         self.parent.qp.setPen(self.color)
-        self.parent.qp.drawPolygon(QPolygon([j for i in points for j in i]))
+        self.parent.qp.drawPolygon(QPolygon([int(j) for i in points for j in i]))
 
     def draw_label(self):
         """Рисование метки с весом ребра"""
@@ -61,13 +61,13 @@ class CanvasEdge:
         self.parent.qp.setPen(QPen(BLACK, dist // 20, Qt.SolidLine))
         self.parent.qp.setBrush(WHITE)
         font = QFont()
-        font.setPixelSize(dist // 5)
+        font.setPixelSize(int(dist // 5))
         self.parent.qp.setFont(font)
         xm = (x1 + x2) // 2
         ym = (y1 + y2) // 2
         r_x, r_y, r_w, r_h = xm - dist // 3, ym - dist // 4, dist // 1.5, dist // 2
-        self.parent.qp.drawRect(r_x, r_y, r_w, r_h)
-        self.parent.qp.drawText(r_x, r_y, r_w, r_h, Qt.AlignCenter, str(self.weight))
+        self.parent.qp.drawRect(int(r_x), int(r_y), int(r_w), int(r_h))
+        self.parent.qp.drawText(int(r_x), int(r_y), int(r_w), int(r_h), Qt.AlignCenter, str(self.weight))
 
     def get_crds(self):
         """Возвраащет координаты ребра"""

@@ -39,10 +39,10 @@ class CanvasNode:
         dist = self.parent.dist
         x, y = self.parent.getPoint(self.row, self.col)
         font = QFont()
-        font.setPixelSize(dist // 2)
+        font.setPixelSize(int(dist // 2))
         self.parent.qp.setBrush(SELECTED_ITEM_COLOR if self.selected else self.color)
         self.parent.qp.setPen(BLACK)
         self.parent.qp.setFont(font)
-        self.parent.qp.drawEllipse(x, y, dist, dist)
-        self.parent.qp.drawText(x, y, dist, dist, Qt.AlignCenter, self.node_name)
+        self.parent.qp.drawEllipse(int(x), int(y), int(dist), int(dist))
+        self.parent.qp.drawText(int(x), int(y), int(dist), int(dist), Qt.AlignCenter, self.node_name)
 

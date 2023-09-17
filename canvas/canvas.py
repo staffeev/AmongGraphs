@@ -103,11 +103,11 @@ class Canvas(QWidget):
         """Отрисовка сетки"""
         self.qp.setPen(DARK_GRAY)
         for i in range(self.rows + 1):
-            self.qp.drawLine(self.x, self.y + i * self.dist,
-                             self.x + self.getWidth(), self.y + i * self.dist)
+            self.qp.drawLine(int(self.x), int(self.y + i * self.dist),
+                             int(self.x + self.getWidth()), int(self.y + i * self.dist))
         for i in range(self.cols + 1):
-            self.qp.drawLine(self.x + i * self.dist, self.y,
-                             self.x + i * self.dist, self.y + self.getHeight())
+            self.qp.drawLine(int(self.x + i * self.dist), int(self.y),
+                             int(self.x + i * self.dist), int(self.y + self.getHeight()))
 
     def checkBorders(self) -> None:
         """Проверка на то, находится ли холст в границах виджета"""
